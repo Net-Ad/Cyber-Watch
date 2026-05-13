@@ -14,10 +14,10 @@ sock = Sock(app)
 app.secret_key = "Group7_netad"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
-# WebRTC signaling
-camera_ws = None
-viewers = []
-ws_lock = threading.Lock()
+# Latest frame storage
+latest_frame = None
+frame_lock = threading.Lock()
+frame_event = threading.Event()
 
 
 def get_device_id():
@@ -126,11 +126,6 @@ def live_cctv():
     return render_template("live_cctv.html", user=session["user"])
 
 
-@app.route("/camera")
-def camera_page():
-    return render_template("camera.html")
-
-
 @app.route("/threat-logs")
 def threat_logs():
     if "user" not in session:
@@ -177,57 +172,43 @@ def analytics():
     )
 
 
-# --- WebRTC Signaling via WebSockets ---
-
-@sock.route("/ws/camera")
-def ws_camera(ws):
-    global camera_ws
-    with ws_lock:
-        camera_ws = ws
-    print("Camera connected")
+# --- WebSocket: receive frames from stream.py ---
+@sock.route("/ws/stream")
+def ws_stream(ws):
+    global latest_frame
+    print("stream.py connected via WebSocket")
     try:
         while True:
-            data = ws.receive()
-            if data is None:
+            frame = ws.receive()
+            if frame is None:
                 break
-            # Forward camera's signaling messages to all viewers
-            with ws_lock:
-                dead = []
-                for viewer in viewers:
-                    try:
-                        viewer.send(data)
-                    except:
-                        dead.append(viewer)
-                for d in dead:
-                    viewers.remove(d)
+            with frame_lock:
+                latest_frame = frame
+            frame_event.set()
+            frame_event.clear()
     finally:
-        with ws_lock:
-            camera_ws = None
-        print("Camera disconnected")
+        print("stream.py disconnected")
 
 
-@sock.route("/ws/viewer")
-def ws_viewer(ws):
-    with ws_lock:
-        viewers.append(ws)
-    print("Viewer connected")
-    try:
-        while True:
-            data = ws.receive()
-            if data is None:
-                break
-            # Forward viewer's signaling messages to camera
-            with ws_lock:
-                if camera_ws:
-                    try:
-                        camera_ws.send(data)
-                    except:
-                        pass
-    finally:
-        with ws_lock:
-            if ws in viewers:
-                viewers.remove(ws)
-        print("Viewer disconnected")
+# --- MJPEG stream to browser ---
+def generate():
+    while True:
+        frame_event.wait(timeout=5)
+        with frame_lock:
+            frame = latest_frame
+        if frame is None:
+            continue
+        if isinstance(frame, str):
+            frame = frame.encode('latin-1')
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+@app.route("/video_feed")
+def video_feed():
+    if "user" not in session:
+        return "Unauthorized", 403
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route("/logout")
