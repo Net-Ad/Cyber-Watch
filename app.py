@@ -1,23 +1,19 @@
 from flask import Flask, render_template, request, redirect, session, Response, make_response
-from flask_sock import Sock
 from database import get_connection
 from datetime import datetime, timedelta
 import uuid
 import threading
-import json
 
 import blocker
 import detector
 
 app = Flask(__name__)
-sock = Sock(app)
 app.secret_key = "Group7_netad"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 
-# Latest frame storage
+# --- Camera streaming globals ---
 latest_frame = None
 frame_lock = threading.Lock()
-frame_event = threading.Event()
 
 
 def get_device_id():
@@ -30,7 +26,9 @@ def get_device_id():
 def save_log(device_id, event_type, status):
     conn = get_connection()
     cursor = conn.cursor()
+
     philippines_time = datetime.utcnow() + timedelta(hours=8)
+
     try:
         cursor.execute("""
             INSERT INTO security_logs (device_id, event_type, status, created_at)
@@ -56,15 +54,23 @@ def login():
 
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT username, password FROM users WHERE username=%s", (username,))
+
+        cursor.execute(
+            "SELECT username, password FROM users WHERE username=%s",
+            (username,)
+        )
+
         user = cursor.fetchone()
         conn.close()
 
         if user and user[1] == password:
             session.permanent = True
             session["user"] = username
+
             detector.clear_failed_attempts(device_id)
+
             save_log(device_id, f"Login Success: {username}", "SUCCESS")
+
             resp = make_response(redirect("/dashboard"))
             resp.set_cookie("device_id", device_id, max_age=60*60*24*365)
             return resp
@@ -78,7 +84,7 @@ def login():
             save_log(device_id, "DEVICE BLOCKED", "BLOCKED")
             return "Security Alert: Device Blocked.", 403
 
-        return render_template("login.html", error="Invalid username or password.")
+        return "Invalid login"
 
     return render_template("login.html")
 
@@ -107,6 +113,7 @@ def dashboard():
         LIMIT 7
     """)
     recent_alerts = cursor.fetchall()
+
     conn.close()
 
     return render_template(
@@ -133,11 +140,13 @@ def threat_logs():
 
     conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute("""
         SELECT device_id, event_type, status, created_at
         FROM security_logs
         ORDER BY created_at DESC
     """)
+
     logs = cursor.fetchall()
     conn.close()
 
@@ -172,34 +181,23 @@ def analytics():
     )
 
 
-# --- WebSocket: receive frames from stream.py ---
-@sock.route("/ws/stream")
-def ws_stream(ws):
+# --- Receives frames from local stream.py script ---
+@app.route("/upload_frame", methods=["POST"])
+def upload_frame():
     global latest_frame
-    print("stream.py connected via WebSocket")
-    try:
-        while True:
-            frame = ws.receive()
-            if frame is None:
-                break
-            with frame_lock:
-                latest_frame = frame
-            frame_event.set()
-            frame_event.clear()
-    finally:
-        print("stream.py disconnected")
+    data = request.data
+    with frame_lock:
+        latest_frame = data
+    return "OK", 200
 
 
-# --- MJPEG stream to browser ---
-def generate():
+def generate_frames():
+    global latest_frame
     while True:
-        frame_event.wait(timeout=5)
         with frame_lock:
             frame = latest_frame
         if frame is None:
             continue
-        if isinstance(frame, str):
-            frame = frame.encode('latin-1')
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
@@ -208,7 +206,8 @@ def generate():
 def video_feed():
     if "user" not in session:
         return "Unauthorized", 403
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route("/logout")

@@ -49,16 +49,14 @@
                     <h3>CAMERA 01</h3>
                     <div class="live-badge">● LIVE</div>
                 </div>
-                <img
-                    src="{{ url_for('video_feed') }}"
-                    class="camera-feed"
-                >
+                <video id="localVideo" autoplay muted playsinline class="camera-feed"></video>
+                <p id="cam-status" style="color:#94a3b8; margin-top:10px; font-size:13px;"></p>
             </div>
 
             <div class="camera-side-panel">
                 <div class="camera-info-card">
                     <h3>Camera Status</h3>
-                    <p>ONLINE</p>
+                    <p id="status-text">CONNECTING</p>
                 </div>
                 <div class="camera-info-card">
                     <h3>AI Detection</h3>
@@ -66,7 +64,7 @@
                 </div>
                 <div class="camera-info-card">
                     <h3>Resolution</h3>
-                    <p>640x480</p>
+                    <p>1280x720</p>
                 </div>
                 <div class="camera-info-card">
                     <h3>Frame Rate</h3>
@@ -84,6 +82,23 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false
+        });
+        document.getElementById("localVideo").srcObject = stream;
+        document.getElementById("status-text").textContent = "ONLINE";
+        document.getElementById("cam-status").textContent = "";
+    } catch (err) {
+        document.getElementById("cam-status").textContent = "Camera access denied or unavailable.";
+        document.getElementById("status-text").textContent = "OFFLINE";
+    }
+}
+
+startCamera();
 </script>
 
 </body>
