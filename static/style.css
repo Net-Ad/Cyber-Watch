@@ -502,15 +502,11 @@ button:hover{
 
 .camera-feed{
     width:100%;
-
+    height:auto;
+    display:block;
     border-radius:15px;
-
     border:2px solid #00d9ff;
-
-    box-shadow:
-        0 0 30px rgba(0,217,255,.15);
-
-    background:black;
+    box-shadow:0 0 30px rgba(0,217,255,.15);
 }
 
 /* ALERTS */
