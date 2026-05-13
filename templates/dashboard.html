@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,3 +142,148 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Security Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <aside class="sidebar">
+
+        <div class="logo-area">
+            <h1>CYBER</h1>
+            <h1 class="logo-accent">WATCH</h1>
+        </div>
+
+        <nav>
+            <a href="/dashboard" class="active">Dashboard</a>
+            <a href="/live-cctv">Live CCTV</a>
+            <a href="/threat-logs">Threat Logs</a>
+            <a href="/analytics">Analytics</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout">Logout</a>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+                <h2>Security Command Center</h2>
+                <p id="system-status">AI Surveillance Active</p>
+            </div>
+
+            <div class="topbar-right">
+                <div id="live-clock"></div>
+
+                <div class="profile-box">
+                    <div class="status-dot"></div>
+                    <span class="text-clip">{{ user }}</span>
+                </div>
+            </div>
+
+        </header>
+
+        <section class="stats-grid">
+
+            <div class="stat-card blue">
+                <h3>Today's Access</h3>
+                <h1>{{ today_access }}</h1>
+            </div>
+
+            <div class="stat-card red">
+                <h3>Unauthorized</h3>
+                <h1>{{ unauthorized }}</h1>
+            </div>
+
+            <div class="stat-card yellow">
+                <h3>Blocked Devices</h3>
+                <h1>{{ unique_attackers }}</h1>
+            </div>
+
+            <div class="stat-card green">
+                <h3>System Health</h3>
+                <h1>99.9%</h1>
+            </div>
+
+        </section>
+
+        <section class="dashboard-grid">
+
+            <div class="camera-section">
+
+                <div class="section-header">
+                    <h3>LIVE SURVEILLANCE</h3>
+
+                    <div class="camera-top-right">
+                        <div id="camera-status">CAMERA ONLINE</div>
+                        <div class="live-indicator"><span></span> LIVE</div>
+                    </div>
+                </div>
+
+                <div class="camera-wrapper">
+                    <img src="{{ url_for('video_feed') }}" class="camera-feed">
+                </div>
+
+            </div>
+
+            <div class="alerts-section">
+
+                <div class="section-header">
+                    <h3>THREAT ACTIVITY</h3>
+                </div>
+
+                <div class="alerts-list">
+
+                    {% for log in recent_alerts %}
+                    <div class="alert-card">
+
+                        <div class="alert-icon {{ 'success' if log[2] == 'SUCCESS' else 'danger' }}"></div>
+
+                        <div class="alert-info">
+                            <h4 class="text-clip">{{ log[1] }}</h4>
+                            <p class="text-clip">Device: {{ log[0] }}</p>
+                        </div>
+
+                        <div class="alert-time">
+                            <span class="alert-date">
+                                {{ log[3].strftime('%b %d, %Y') if log[3] else 'N/A' }}
+                            </span>
+
+                            <span class="alert-clock">
+                                {{ log[3].strftime('%H:%M:%S') if log[3] else '00:00:00' }}
+                            </span>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>
+>>>>>>> 5ac76773255beb7199aedf6c80e40b0dd7579e78

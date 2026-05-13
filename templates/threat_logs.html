@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,3 +102,108 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Logs</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <aside class="sidebar">
+
+        <div class="logo-area">
+            <h1>CYBER</h1>
+            <h1 class="logo-accent">WATCH</h1>
+        </div>
+
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/live-cctv">Live CCTV</a>
+            <a href="/threat-logs" class="active">Threat Logs</a>
+            <a href="/analytics">Analytics</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout">Logout</a>
+        </div>
+
+    </aside>
+
+    <main class="main-content">
+
+        <div class="topbar">
+
+            <div>
+                <h2>Security Command Center</h2>
+                <p id="system-status">AI Surveillance Active</p>
+            </div>
+
+            <div class="topbar-right">
+                <div id="live-clock"></div>
+
+                <div class="profile-box">
+                    <div class="status-dot"></div>
+                    <span class="text-clip">{{ user }}</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="logs-table-container">
+
+            <table class="logs-table">
+
+                <thead>
+                    <tr>
+                        <th>DEVICE ID</th>
+                        <th>EVENT</th>
+                        <th>STATUS</th>
+                        <th>DATE & TIME</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for log in logs %}
+                    <tr>
+
+                        <td class="text-clip">{{ log[0] }}</td>
+                        <td class="text-clip">{{ log[1] }}</td>
+
+                        <td>
+                            <span class="table-status {% if log[2] == 'SUCCESS' %}table-success{% else %}table-danger{% endif %}">
+                                {{ log[2] }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ log[3].strftime('%B %d, %Y | %I:%M:%S %p') }}
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>
+>>>>>>> 5ac76773255beb7199aedf6c80e40b0dd7579e78

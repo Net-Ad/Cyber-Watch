@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,3 +63,75 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Security Login</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="login-page">
+
+<div class="background-overlay"></div>
+
+<div class="login-container">
+
+    <div class="login-left">
+        <h1>CYBER<br>SECURITY<br>COMMAND</h1>
+
+        <p>
+            AI Powered Surveillance Monitoring System
+            with Real-Time Threat Detection
+        </p>
+
+        <div class="security-badges">
+            <span>LIVE CCTV</span>
+            <span>AI DETECTION</span>
+            <span>THREAT MONITOR</span>
+        </div>
+    </div>
+
+    <div class="login-box">
+
+        <div class="login-header">
+            <h2>SECURE LOGIN</h2>
+            <p>Authorized Personnel Only</p>
+        </div>
+
+        <form method="POST">
+
+            {% if error %}
+                <div style="color: #ff4d4d; background-color: rgba(255, 77, 77, 0.1); border: 1px solid #ff4d4d; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center; font-family: 'Inter', sans-serif; font-size: 14px;">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <div class="input-group">
+                <label>USERNAME</label>
+                <input type="text" name="username" placeholder="Enter username" required>
+            </div>
+
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" name="password" placeholder="Enter password" required>
+            </div>
+
+            <button type="submit">
+                ACCESS SYSTEM
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+>>>>>>> 5ac76773255beb7199aedf6c80e40b0dd7579e78

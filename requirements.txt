@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Flask
 gunicorn
 psycopg2-binary
@@ -9,3 +10,16 @@ Jinja2
 itsdangerous
 click
 blinker
+=======
+Flask
+gunicorn
+psycopg2-binary
+opencv-python-headless
+numpy
+tzdata
+Werkzeug
+Jinja2
+itsdangerous
+click
+blinker
+>>>>>>> 5ac76773255beb7199aedf6c80e40b0dd7579e78
