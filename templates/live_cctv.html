@@ -2,167 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live CCTV</title>
-
-    <link rel="stylesheet"
-    href="{{ url_for('static', filename='style.css') }}">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
 <div class="dashboard">
 
-    <!-- SIDEBAR -->
-
     <aside class="sidebar">
-
         <div class="logo-area">
-            <h1>
-                CYBER
-            </h1>
-            <h1 class="logo-accent">
-                WATCH
-            </h1>
+            <h1>CYBER</h1>
+            <h1 class="logo-accent">WATCH</h1>
         </div>
-
         <nav>
-
-            <a href="/dashboard">
-                Dashboard
-            </a>
-
-            <a href="/live-cctv"
-            class="active">
-
-                Live CCTV
-
-            </a>
-
-            <a href="/threat-logs">
-                Threat Logs
-            </a>
-
-            <a href="/analytics">
-                Analytics
-            </a>
-
+            <a href="/dashboard">Dashboard</a>
+            <a href="/live-cctv" class="active">Live CCTV</a>
+            <a href="/threat-logs">Threat Logs</a>
+            <a href="/analytics">Analytics</a>
         </nav>
-
         <div class="sidebar-footer">
             <a href="/logout">Logout</a>
         </div>
-
     </aside>
-
-    <!-- MAIN -->
 
     <main class="main-content">
 
-        <!-- TOPBAR -->
-
         <div class="topbar">
-
             <div class="topbar-left">
-
                 <h2>Live CCTV Monitoring</h2>
-
-                <p id="system-status">
-                    Real-time AI surveillance
-                    and security monitoring system
-                </p>
-
+                <p id="system-status">Real-time AI surveillance and security monitoring system</p>
             </div>
-
             <div class="topbar-right">
-
                 <div id="live-clock"></div>
-
                 <div class="profile-box">
-
                     <div class="status-dot"></div>
-
                     <span>{{ user }}</span>
-
                 </div>
-
             </div>
-
         </div>
 
-        <!-- CCTV -->
-
         <div class="cctv-grid">
-
             <div class="cctv-card">
-
                 <div class="feed-topbar">
-
                     <h3>CAMERA 01</h3>
-
-                    <div class="live-badge">
-                        ● LIVE
-                    </div>
-
+                    <div class="live-badge">● LIVE</div>
                 </div>
-
-                <img
-                    src="{{ url_for('video_feed') }}"
-                    class="camera-feed"
-                >
-
+                <video id="localVideo" autoplay muted playsinline class="camera-feed"></video>
+                <p id="cam-status" style="color:#94a3b8; margin-top:10px; font-size:13px;"></p>
             </div>
 
             <div class="camera-side-panel">
-
                 <div class="camera-info-card">
                     <h3>Camera Status</h3>
-                    <p>ONLINE</p>
+                    <p id="status-text">CONNECTING</p>
                 </div>
-
                 <div class="camera-info-card">
                     <h3>AI Detection</h3>
                     <p>ACTIVE</p>
                 </div>
-
                 <div class="camera-info-card">
                     <h3>Resolution</h3>
-                    <p>1920x1080</p>
+                    <p>1280x720</p>
                 </div>
-
                 <div class="camera-info-card">
                     <h3>Frame Rate</h3>
                     <p>30 FPS</p>
                 </div>
-
             </div>
-
         </div>
 
     </main>
-
 </div>
 
 <script>
-
-function updateClock(){
-
-    const now = new Date();
-
-    document.getElementById("live-clock")
-    .innerHTML = now.toLocaleString();
-
+function updateClock() {
+    document.getElementById("live-clock").innerHTML = new Date().toLocaleString();
 }
-
-setInterval(updateClock,1000);
-
+setInterval(updateClock, 1000);
 updateClock();
 
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false
+        });
+        document.getElementById("localVideo").srcObject = stream;
+        document.getElementById("status-text").textContent = "ONLINE";
+        document.getElementById("cam-status").textContent = "";
+    } catch (err) {
+        document.getElementById("cam-status").textContent = "Camera access denied or unavailable.";
+        document.getElementById("status-text").textContent = "OFFLINE";
+    }
+}
+
+startCamera();
 </script>
 
 </body>
