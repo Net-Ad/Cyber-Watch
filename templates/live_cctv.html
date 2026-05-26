@@ -6,112 +6,11 @@
     <title>Live CCTV</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        /* ── FEATURE 4: Multi-camera grid ── */
-        .multicam-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            padding: 0 24px 24px;
-        }
-        .cam-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-        .cam-tile {
-            background: #0d1b2a;
-            border: 1px solid #1e3a5f;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-        .cam-tile:hover { border-color: #00d4ff88; }
-        .cam-tile.primary {
-            grid-column: 1 / -1;
-            border-color: #00d4ff55;
-        }
-        .cam-tile video,
-        .cam-tile img,
-        .cam-tile .cam-placeholder {
-            width: 100%;
-            aspect-ratio: 16/9;
-            object-fit: cover;
-            display: block;
-            background: #060e18;
-        }
-        .cam-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 8px;
-            color: #1e3a5f;
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-        }
-        .cam-placeholder svg { width: 36px; height: 36px; stroke: #1e3a5f; }
-        .cam-tile-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: #0a1628;
-        }
-        .cam-tile-name {
-            font-size: 12px;
-            font-weight: 600;
-            color: #94a3b8;
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 0.5px;
-        }
-        .cam-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .cam-dot.online  { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
-        .cam-dot.offline { background: #ef4444; }
-        .cam-badge {
-            font-size: 10px;
-            color: #94a3b8;
-            font-family: 'Inter', sans-serif;
-        }
-        .side-panel { display: flex; flex-direction: column; gap: 12px; min-width: 220px; }
-        .camera-info-card {
-            background: #0d1b2a;
-            border: 1px solid #1e3a5f;
-            border-radius: 10px;
-            padding: 16px 18px;
-        }
-        .camera-info-card h3 {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 6px;
-            font-family: 'Orbitron', sans-serif;
-        }
-        .camera-info-card p {
-            font-size: 18px;
-            font-weight: 700;
-            color: #00d4ff;
-            font-family: 'Orbitron', sans-serif;
-        }
-        .cctv-wrapper { display: flex; gap: 16px; padding: 0 24px 24px; }
-        .cctv-main { flex: 1; }
-        .expand-hint {
-            font-size: 10px;
-            color: #1e3a5f;
-            text-align: center;
-            padding: 4px 0 8px;
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
 </head>
 <body>
+
 <div class="dashboard">
+
     <aside class="sidebar">
         <div class="logo-area">
             <h1>CYBER</h1>
@@ -129,77 +28,35 @@
     </aside>
 
     <main class="main-content">
-        <header class="topbar">
-            <div>
+
+        <div class="topbar">
+            <div class="topbar-left">
                 <h2>Live CCTV Monitoring</h2>
-                <p>Real-time AI surveillance and security monitoring system</p>
+                <p id="system-status">Real-time AI surveillance and security monitoring system</p>
             </div>
             <div class="topbar-right">
                 <div id="live-clock"></div>
                 <div class="profile-box">
                     <div class="status-dot"></div>
-                    <span class="text-clip">{{ user }}</span>
+                    <span>{{ user }}</span>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <!-- ── FEATURE 4: Multi-camera layout ── -->
-        <div class="cctv-wrapper">
-            <div class="cctv-main">
-                <div class="multicam-layout">
-                    <div class="cam-grid">
-                        <!-- Primary camera: captures webcam and streams to server -->
-                        <div class="cam-tile primary" id="tile-cam1">
-                            <div style="position:relative;">
-                                <!-- Hidden video for capture -->
-                                <video id="cam1-capture" autoplay muted playsinline style="display:none;"></video>
-                                <!-- Displayed stream from server -->
-                                <img id="cam1-display" src="/video_feed" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#060e18;" alt="Camera Feed">
-                                <canvas id="cam1-canvas" style="display:none;"></canvas>
-                            </div>
-                            <div class="cam-tile-bar">
-                                <span class="cam-tile-name">
-                                    <span class="cam-dot online" id="dot-cam1"></span>CAMERA 01 — Primary
-                                </span>
-                                <span class="cam-badge" id="badge-cam1">● LIVE</span>
-                            </div>
-                        </div>
-
-                        <!-- Secondary cameras — placeholders -->
-                        <div class="cam-tile">
-                            <div class="cam-placeholder" style="aspect-ratio:16/9;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M15 10l4.553-2.277A1 1 0 0121 8.68v6.638a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                                Camera 02
-                            </div>
-                            <div class="cam-tile-bar">
-                                <span class="cam-tile-name"><span class="cam-dot offline"></span>CAMERA 02</span>
-                                <span class="cam-badge">OFFLINE</span>
-                            </div>
-                        </div>
-
-                        <div class="cam-tile">
-                            <div class="cam-placeholder" style="aspect-ratio:16/9;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M15 10l4.553-2.277A1 1 0 0121 8.68v6.638a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                                Camera 03
-                            </div>
-                            <div class="cam-tile-bar">
-                                <span class="cam-tile-name"><span class="cam-dot offline"></span>CAMERA 03</span>
-                                <span class="cam-badge">OFFLINE</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="expand-hint">Click any tile to expand · Add more cameras via /upload_frame endpoint</p>
+        <div class="cctv-grid">
+            <div class="cctv-card">
+                <div class="feed-topbar">
+                    <h3>CAMERA 01</h3>
+                    <div class="live-badge">● LIVE</div>
                 </div>
+                <video id="localVideo" autoplay muted playsinline class="camera-feed"></video>
+                <p id="cam-status" style="color:#94a3b8; margin-top:10px; font-size:13px;"></p>
             </div>
 
-            <div class="side-panel">
+            <div class="camera-side-panel">
                 <div class="camera-info-card">
                     <h3>Camera Status</h3>
-                    <p id="status-text">ONLINE</p>
-                </div>
-                <div class="camera-info-card">
-                    <h3>Cameras Online</h3>
-                    <p id="cams-online">1 / 3</p>
+                    <p id="status-text">CONNECTING</p>
                 </div>
                 <div class="camera-info-card">
                     <h3>AI Detection</h3>
@@ -215,118 +72,34 @@
                 </div>
             </div>
         </div>
+
     </main>
 </div>
 
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
-// ── Capture webcam and push frames to /upload_frame ──
-let captureStream = null;
-let pushInterval = null;
-
-function setOfflineUI(reason) {
-    document.getElementById("status-text").textContent = "OFFLINE";
-    document.getElementById("dot-cam1").className = "cam-dot offline";
-    document.getElementById("badge-cam1").textContent = "OFFLINE";
-    document.getElementById("cams-online").textContent = "0 / 3";
-
-    // Show an overlay on the primary camera tile
-    const tile = document.getElementById("tile-cam1");
-    let overlay = tile.querySelector(".cam-offline-overlay");
-    if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.className = "cam-offline-overlay";
-        overlay.style.cssText = [
-            "position:absolute;inset:0;display:flex;flex-direction:column;",
-            "align-items:center;justify-content:center;gap:10px;",
-            "background:rgba(6,14,24,0.92);color:#ef4444;",
-            "font-family:'Orbitron',sans-serif;font-size:13px;z-index:10;"
-        ].join("");
-        tile.querySelector("div[style*='position:relative']").appendChild(overlay);
-    }
-    overlay.innerHTML = `
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
-          <path d="M15 10l4.553-2.277A1 1 0 0121 8.68v6.638a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-          <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444" stroke-width="1.5"/>
-        </svg>
-        <span>${reason}</span>
-        <span style="font-size:10px;color:#64748b;font-family:'Inter',sans-serif;">
-            Allow camera access in your browser and refresh
-        </span>`;
+function updateClock() {
+    document.getElementById("live-clock").innerHTML = new Date().toLocaleString();
 }
+setInterval(updateClock, 1000);
+updateClock();
 
-function setOnlineUI() {
-    document.getElementById("status-text").textContent = "ONLINE";
-    document.getElementById("dot-cam1").className = "cam-dot online";
-    document.getElementById("badge-cam1").textContent = "● LIVE";
-    document.getElementById("cams-online").textContent = "1 / 3";
-    // Remove overlay if present
-    const overlay = document.querySelector(".cam-offline-overlay");
-    if (overlay) overlay.remove();
-}
-
-async function startCapture() {
+async function startCamera() {
     try {
-        captureStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 1280, height: 720 }, audio: false
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false
         });
-        const video = document.getElementById("cam1-capture");
-        video.srcObject = captureStream;
-
-        video.addEventListener("loadedmetadata", () => {
-            setOnlineUI();
-
-            const canvas = document.getElementById("cam1-canvas");
-            canvas.width = 1280;
-            canvas.height = 720;
-            const ctx = canvas.getContext("2d");
-
-            // Push frames to server at ~15fps
-            pushInterval = setInterval(() => {
-                ctx.drawImage(video, 0, 0, 1280, 720);
-                canvas.toBlob(blob => {
-                    if (!blob) return;
-                    fetch("/upload_frame", {
-                        method: "POST",
-                        headers: { "Content-Type": "image/jpeg" },
-                        body: blob
-                    }).catch(() => {});
-                }, "image/jpeg", 0.7);
-            }, 67); // ~15fps
-        }, { once: true });
-
+        document.getElementById("localVideo").srcObject = stream;
+        document.getElementById("status-text").textContent = "ONLINE";
+        document.getElementById("cam-status").textContent = "";
     } catch (err) {
-        console.error("Camera error:", err.name, err.message);
-        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-            setOfflineUI("CAMERA PERMISSION DENIED");
-        } else if (err.name === "NotFoundError") {
-            setOfflineUI("NO CAMERA DETECTED");
-        } else if (err.name === "NotReadableError") {
-            setOfflineUI("CAMERA IN USE BY ANOTHER APP");
-        } else {
-            setOfflineUI("CAMERA UNAVAILABLE");
-        }
+        document.getElementById("cam-status").textContent = "Camera access denied or unavailable.";
+        document.getElementById("status-text").textContent = "OFFLINE";
     }
 }
 
-// Release camera when navigating away
-window.addEventListener("beforeunload", () => {
-    if (pushInterval) clearInterval(pushInterval);
-    if (captureStream) {
-        captureStream.getTracks().forEach(t => t.stop());
-        captureStream = null;
-    }
-});
-
-// ── Click tile to expand ──
-document.querySelectorAll('.cam-tile').forEach(tile => {
-    tile.addEventListener('click', () => {
-        document.querySelectorAll('.cam-tile').forEach(t => t.classList.remove('primary'));
-        tile.classList.add('primary');
-    });
-});
-
-startCapture();
+startCamera();
 </script>
+
 </body>
 </html>

@@ -14,46 +14,6 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 latest_frame = None
 frame_lock = threading.Lock()
 
-def _make_placeholder_frame():
-    """Generate a black 'NO SIGNAL' JPEG used when no webcam frame is available."""
-    try:
-        from PIL import Image, ImageDraw
-        img = Image.new("RGB", (1280, 720), color=(6, 14, 24))
-        draw = ImageDraw.Draw(img)
-        # Draw centered text
-        text = "NO SIGNAL"
-        bbox = draw.textbbox((0, 0), text)
-        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        draw.text(((1280 - tw) // 2, (720 - th) // 2), text, fill=(30, 58, 95))
-        import io
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=60)
-        return buf.getvalue()
-    except Exception:
-        # Minimal valid 1x1 black JPEG fallback
-        return (
-            b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00'
-            b'\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t'
-            b'\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a'
-            b'\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342\x1e\x1f'
-            b'-=49=\x17\x18\x18\x18\x18\x18\x18\x18\x18\x18\x18\x18\x18\x18'
-            b'\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00'
-            b'\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00'
-            b'\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\xff\xc4\x00'
-            b'\xb5\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00'
-            b'\x01}\x01\x02\x03\x00\x04\x11\x05\x12!1A\x06\x13Qa\x07"q\x142\x81'
-            b'\x91\xa1\x08#B\xb1\xc1\x15R\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19'
-            b'\x1a%&\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x83\x84\x85\x86'
-            b'\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4'
-            b'\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2'
-            b'\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9'
-            b'\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5'
-            b'\xf6\xf7\xf8\xf9\xfa\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xfb\xd2'
-            b'\x8a(\x03\xff\xd9'
-        )
-
-PLACEHOLDER_FRAME = _make_placeholder_frame()
-
 def get_device_id():
     device_id = request.cookies.get("device_id")
     if not device_id:
@@ -273,22 +233,12 @@ def upload_frame():
 
 
 def generate_frames():
-    import time
     global latest_frame
-    last_frame = None
     while True:
         with frame_lock:
             frame = latest_frame
         if frame is None:
-            # No webcam frame yet — send placeholder so the <img> renders immediately
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + PLACEHOLDER_FRAME + b'\r\n')
-            time.sleep(0.5)
             continue
-        if frame is last_frame:
-            time.sleep(0.03)
-            continue
-        last_frame = frame
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 

@@ -4,198 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyber Security Dashboard</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        #cw-toast-container {
-            position: fixed; top: 20px; right: 20px; z-index: 9999;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .cw-toast {
-            padding: 12px 20px; border-radius: 10px; font-size: 13px;
-            font-family: 'Inter', sans-serif; font-weight: 500;
-            min-width: 280px; opacity: 0; transform: translateX(40px);
-            transition: all 0.3s ease;
-        }
-        .cw-toast.show { opacity: 1; transform: translateX(0); }
-        .cw-toast.danger  { background: #2b0d0d; border: 1px solid #ef444455; color: #ef4444; }
-        .cw-toast.success { background: #0d2b1a; border: 1px solid #22c55e55; color: #22c55e; }
-        .cw-toast.warn    { background: #2b1f0d; border: 1px solid #f59e0b55; color: #f59e0b; }
-        .cw-toast.info    { background: #0d1e2b; border: 1px solid #00d4ff55; color: #00d4ff; }
-        .camera-feed {
-            width: 100%;
-            height: 380px;
-            border-radius: 15px;
-            border: 2px solid #00d9ff;
-            box-shadow: 0 0 30px rgba(0,217,255,.15);
-            background: black;
-            object-fit: cover;
-            display: block;
-        }
-    </style>
 </head>
+
 <body>
 
-<div id="cw-toast-container"></div>
-
 <div class="dashboard">
+
     <aside class="sidebar">
+
         <div class="logo-area">
             <h1>CYBER</h1>
             <h1 class="logo-accent">WATCH</h1>
         </div>
+
         <nav>
             <a href="/dashboard" class="active">Dashboard</a>
             <a href="/live-cctv">Live CCTV</a>
             <a href="/threat-logs">Threat Logs</a>
             <a href="/analytics">Analytics</a>
         </nav>
+
         <div class="sidebar-footer">
             <a href="/logout">Logout</a>
         </div>
+
     </aside>
 
     <main class="main-content">
+
         <header class="topbar">
+
             <div>
                 <h2>Security Command Center</h2>
                 <p id="system-status">AI Surveillance Active</p>
             </div>
+
             <div class="topbar-right">
                 <div id="live-clock"></div>
+
                 <div class="profile-box">
                     <div class="status-dot"></div>
                     <span class="text-clip">{{ user }}</span>
                 </div>
             </div>
+
         </header>
 
         <section class="stats-grid">
+
             <div class="stat-card blue">
                 <h3>Today's Access</h3>
-                <h1 id="stat-access">{{ today_access }}</h1>
+                <h1>{{ today_access }}</h1>
             </div>
+
             <div class="stat-card red">
                 <h3>Unauthorized</h3>
-                <h1 id="stat-failed">{{ unauthorized }}</h1>
+                <h1>{{ unauthorized }}</h1>
             </div>
+
             <div class="stat-card yellow">
                 <h3>Blocked Devices</h3>
-                <h1 id="stat-blocked">{{ unique_attackers }}</h1>
+                <h1>{{ unique_attackers }}</h1>
             </div>
+
             <div class="stat-card green">
                 <h3>System Health</h3>
                 <h1>99.9%</h1>
             </div>
+
         </section>
 
         <section class="dashboard-grid">
+
             <div class="camera-section">
+
                 <div class="section-header">
                     <h3>LIVE SURVEILLANCE</h3>
+
                     <div class="camera-top-right">
                         <div id="camera-status">CAMERA ONLINE</div>
                         <div class="live-indicator"><span></span> LIVE</div>
                     </div>
                 </div>
+
                 <div class="camera-wrapper">
-                    <!-- Displays the server stream — no camera permission needed here -->
-                    <img id="remoteVideo" src="/video_feed" class="camera-feed" alt="Live Feed"
-                         onerror="this.style.opacity='0.3'; document.getElementById('camera-status').textContent='NO SIGNAL'; document.getElementById('camera-status').style.color='#ef4444';"
-                         onload="document.getElementById('camera-status').textContent='CAMERA ONLINE'; document.getElementById('camera-status').style.color='#22c55e';">
+                    <video id="remoteVideo" autoplay muted playsinline class="camera-feed"></video>
                 </div>
+
             </div>
 
             <div class="alerts-section">
+
                 <div class="section-header">
                     <h3>THREAT ACTIVITY</h3>
                 </div>
-                <div class="alerts-list" id="alerts-list">
+
+                <div class="alerts-list">
+
                     {% for log in recent_alerts %}
                     <div class="alert-card">
+
                         <div class="alert-icon {{ 'success' if log[2] == 'SUCCESS' else 'danger' }}"></div>
+
                         <div class="alert-info">
                             <h4 class="text-clip">{{ log[1] }}</h4>
                             <p class="text-clip">Device: {{ log[0] }}</p>
                         </div>
+
                         <div class="alert-time">
-                            <span class="alert-date">{{ log[3].strftime('%b %d, %Y') if log[3] else 'N/A' }}</span>
-                            <span class="alert-clock">{{ log[3].strftime('%H:%M:%S') if log[3] else '00:00:00' }}</span>
+                            <span class="alert-date">
+                                {{ log[3].strftime('%b %d, %Y') if log[3] else 'N/A' }}
+                            </span>
+
+                            <span class="alert-clock">
+                                {{ log[3].strftime('%H:%M:%S') if log[3] else '00:00:00' }}
+                            </span>
                         </div>
+
                     </div>
                     {% endfor %}
+
                 </div>
+
             </div>
+
         </section>
+
     </main>
+
 </div>
 
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
 <script>
-/* ── Toast ── */
-function showToast(message, type = 'info') {
-    const container = document.getElementById('cw-toast-container');
-    const toast = document.createElement('div');
-    toast.className = `cw-toast ${type}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 400);
-    }, 5000);
-}
-
-/* ── Real-time polling ── */
-let prevFailed = null, prevBlocked = null;
-
-async function pollStats() {
+async function startCamera() {
     try {
-        const res = await fetch('/api/stats');
-        if (!res.ok) return;
-        const data = await res.json();
-
-        if (prevFailed === null) {
-            prevFailed = data.failed_today;
-            prevBlocked = data.blocked;
-            return;
-        }
-
-        if (data.failed_today > prevFailed) {
-            const diff = data.failed_today - prevFailed;
-            showToast(`⚠ ${diff} new unauthorized login attempt${diff > 1 ? 's' : ''} detected!`, 'danger');
-            try { new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3").play(); } catch(e){}
-        }
-        if (data.blocked > prevBlocked) {
-            showToast('🚫 A device was blocked (brute force detected).', 'warn');
-        }
-
-        const fa = document.getElementById('stat-access');
-        const ff = document.getElementById('stat-failed');
-        const fb = document.getElementById('stat-blocked');
-        if (fa) fa.textContent = data.success_today;
-        if (ff) ff.textContent = data.failed_today;
-        if (fb) fb.textContent = data.blocked;
-
-        prevFailed = data.failed_today;
-        prevBlocked = data.blocked;
-    } catch(e) {}
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false
+        });
+        document.getElementById("remoteVideo").srcObject = stream;
+        document.getElementById("camera-status").textContent = "CAMERA ONLINE";
+    } catch (err) {
+        document.getElementById("camera-status").textContent = "CAMERA OFFLINE";
+    }
 }
-
-setInterval(pollStats, 5000);
-pollStats();
-
-/* ── Auto-refresh alerts list ── */
-setInterval(() => {
-    fetch(window.location.href)
-        .then(r => r.text())
-        .then(html => {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const nw = doc.getElementById('alerts-list');
-            const cur = document.getElementById('alerts-list');
-            if (nw && cur) cur.innerHTML = nw.innerHTML;
-        }).catch(()=>{});
-}, 10000);
+startCamera();
 </script>
+
 </body>
 </html>
