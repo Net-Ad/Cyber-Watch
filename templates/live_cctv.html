@@ -7,48 +7,48 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ── Feed grid ── */
-        .cctv-feeds-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
-            gap: 24px;
+        /* ── Per-camera layout: video left, status sidebar right ── */
+        .camera-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 28px;
         }
 
-        /* ── Feed card ── */
+        /* ── Feed card (left) ── */
         .feed-card {
+            flex: 1;
+            min-width: 0;
             background: var(--card-bg, #1a1a2e);
             border: 1px solid var(--border-color, #2a2a4a);
             border-radius: 12px;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
         .feed-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 16px;
+            padding: 12px 18px;
             border-bottom: 1px solid var(--border-color, #2a2a4a);
         }
         .feed-card-header h3 {
             margin: 0;
             font-size: 12px;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             color: var(--text-primary, #e0e0ff);
         }
-        .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+        .live-indicator { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .dot.red  { background: #e74c3c; animation: blink 1s infinite; }
         .dot.grey { background: #444; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-        /* ── Video wrapper ── */
         .feed-img-wrap {
             position: relative;
             width: 100%;
-            background: #080812;
-            min-height: 220px;
+            background: #060610;
+            min-height: 260px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -56,76 +56,71 @@
         .feed-img-wrap img { width: 100%; height: auto; display: block; }
         .feed-overlay-status {
             position: absolute; bottom: 8px; left: 10px;
-            font-size: 10px; color: rgba(255,255,255,0.5);
-            background: rgba(0,0,0,0.55);
+            font-size: 10px; color: rgba(255,255,255,0.45);
+            background: rgba(0,0,0,0.6);
             padding: 2px 8px; border-radius: 4px;
             font-family: monospace;
         }
         .feed-error {
             color: #e74c3c; font-size: 13px;
-            text-align: center; padding: 30px 20px; line-height: 1.7;
+            text-align: center; padding: 40px 20px; line-height: 1.8;
         }
         .feed-connecting {
-            color: var(--text-muted, #666);
-            font-size: 13px; padding: 30px; text-align: center;
+            color: var(--text-muted, #555);
+            font-size: 13px; padding: 40px; text-align: center;
         }
 
-        /* ── Status panel (below video) ── */
-        .status-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1px;
-            background: var(--border-color, #2a2a4a);
-            border-top: 1px solid var(--border-color, #2a2a4a);
-        }
-        .status-cell {
-            background: var(--card-bg, #1a1a2e);
-            padding: 12px 16px;
+        /* ── Status sidebar (right) ── */
+        .status-sidebar {
+            width: 240px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 10px;
         }
-        .status-cell:last-child {
-            /* motion cell spans full width */
-            grid-column: 1 / -1;
-            border-top: 1px solid var(--border-color, #2a2a4a);
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
+        .stat-card {
+            background: var(--card-bg, #1a1a2e);
+            border: 1px solid var(--border-color, #2a2a4a);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
-        .status-label {
+        .stat-label {
             font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             color: var(--text-muted, #666);
             font-weight: 500;
         }
-        .status-value {
-            font-size: 16px;
+        .stat-value {
+            font-size: 20px;
             font-weight: 700;
             color: var(--text-primary, #e0e0ff);
             line-height: 1.2;
         }
-        .status-value.green  { color: #1db954; }
-        .status-value.red    { color: #e74c3c; }
-        .status-value.muted  { color: #555; font-size: 13px; font-weight: 500; }
+        .stat-value.green { color: #1db954; }
+        .stat-value.red   { color: #e74c3c; }
+        .stat-value.muted { color: #444; font-size: 15px; font-weight: 500; }
 
-        /* Motion row */
-        .motion-row-left  { display: flex; flex-direction: column; gap: 3px; }
-        .motion-row-right { flex-shrink: 0; }
+        /* Motion card */
+        .stat-card.motion-card { gap: 8px; }
+        .motion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
         .motion-indicator {
-            display: flex; align-items: center; gap: 7px;
+            display: flex; align-items: center; gap: 8px;
             font-size: 13px; font-weight: 700;
         }
         .motion-dot { width: 9px; height: 9px; border-radius: 50%; background: #1db954; flex-shrink: 0; }
         .motion-dot.alert { background: #e74c3c; animation: blink 0.5s infinite; }
-        .motion-timestamp {
-            font-size: 10px;
-            color: var(--text-muted, #666);
-            font-family: monospace;
-        }
+        .motion-label-text { color: #1db954; }
+        .motion-label-text.alert { color: #e74c3c; }
         .clear-btn {
-            background: rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.06);
             border: 1px solid var(--border-color, #2a2a4a);
             border-radius: 5px;
             color: var(--text-muted, #888);
@@ -137,7 +132,20 @@
             text-transform: uppercase;
             transition: background 0.2s;
         }
-        .clear-btn:hover { background: rgba(255,255,255,0.13); }
+        .clear-btn:hover { background: rgba(255,255,255,0.12); }
+        .motion-timestamp {
+            font-size: 10px;
+            color: var(--text-muted, #555);
+            font-family: monospace;
+            font-style: italic;
+        }
+
+        /* Responsive: stack on small screens */
+        @media (max-width: 800px) {
+            .camera-layout { flex-direction: column; }
+            .status-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+            .stat-card { flex: 1; min-width: 120px; }
+        }
     </style>
 </head>
 <body>
@@ -171,7 +179,7 @@
             </div>
         </header>
 
-        <!-- ── Live Feed Grid ── -->
+        <!-- ── Camera feeds ── -->
         <div id="feedsContainer">
             <p style="text-align:center;color:var(--text-muted,#888);padding:40px;">Loading cameras…</p>
         </div>
@@ -181,18 +189,19 @@
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 <script>
 // ============================================================
-//  Hardcoded-camera CCTV viewer with per-camera status panel
+//  Hardcoded-camera CCTV viewer
+//  Layout: video feed (left) + status sidebar (right) per camera
 // ============================================================
 
 let feedIntervals = {};
 let motionStates  = {};
-let frameStats    = {};   // { width, height, fps, lastFrameTime, frameCount }
+let frameStats    = {};
 
 const REFRESH_MS       = 400;
 const MOTION_THRESHOLD = 3.5;
 const PIXEL_DIFF       = 20;
 
-// ── Boot ─────────────────────────────────────────────────────────────────
+// ── Boot ─────────────────────────────────────────────────────
 async function init() {
     try {
         const r    = await fetch('/cctv-cameras');
@@ -204,7 +213,7 @@ async function init() {
     }
 }
 
-// ── Build feed cards ──────────────────────────────────────────────────────
+// ── Build one camera-layout row per camera ────────────────────
 function renderFeeds(cameras) {
     Object.values(feedIntervals).forEach(clearInterval);
     feedIntervals = {};
@@ -219,67 +228,63 @@ function renderFeeds(cameras) {
         return;
     }
 
-    container.innerHTML = '<div class="cctv-feeds-grid" id="feedsGrid"></div>';
-    const grid = document.getElementById('feedsGrid');
+    container.innerHTML = '';
 
     cameras.forEach((cam, i) => {
-        motionStates[i] = { prevData: null, active: false, timeout: null, lastEventTime: null };
+        motionStates[i] = { prevData: null, active: false, timeout: null, lastEventTime: null, initialized: false };
         frameStats[i]   = { width: 0, height: 0, fps: 0, frameCount: 0, lastSecond: Date.now() };
 
-        grid.innerHTML += `
-        <div class="feed-card" id="feedCard-${i}">
+        container.innerHTML += `
+        <div class="camera-layout" id="camLayout-${i}">
 
-            <!-- Header -->
-            <div class="feed-card-header">
-                <h3>${escHtml(cam.name)}</h3>
-                <div class="live-indicator">
-                    <span class="dot grey" id="liveDot-${i}"></span>
-                    <span id="liveLabel-${i}">CONNECTING</span>
+            <!-- ── Video feed card ── -->
+            <div class="feed-card">
+                <div class="feed-card-header">
+                    <h3>${escHtml(cam.name)}</h3>
+                    <div class="live-indicator">
+                        <span class="dot grey" id="liveDot-${i}"></span>
+                        <span id="liveLabel-${i}">CONNECTING</span>
+                    </div>
+                </div>
+                <div class="feed-img-wrap" id="feedWrap-${i}">
+                    <p class="feed-connecting">Connecting…</p>
+                    <canvas id="motionCanvas-${i}" style="display:none;"></canvas>
                 </div>
             </div>
 
-            <!-- Video -->
-            <div class="feed-img-wrap" id="feedWrap-${i}">
-                <p class="feed-connecting">Connecting…</p>
-                <canvas id="motionCanvas-${i}" style="display:none;"></canvas>
-            </div>
+            <!-- ── Status sidebar ── -->
+            <div class="status-sidebar">
 
-            <!-- Status panel -->
-            <div class="status-panel">
-
-                <div class="status-cell">
-                    <span class="status-label">Camera Status</span>
-                    <span class="status-value muted" id="statStatus-${i}">CONNECTING</span>
+                <div class="stat-card">
+                    <span class="stat-label">Camera Status</span>
+                    <span class="stat-value muted" id="statStatus-${i}">CONNECTING</span>
                 </div>
 
-                <div class="status-cell">
-                    <span class="status-label">AI Detection</span>
-                    <span class="status-value muted" id="statAI-${i}">STANDBY</span>
+                <div class="stat-card">
+                    <span class="stat-label">AI Detection</span>
+                    <span class="stat-value muted" id="statAI-${i}">STANDBY</span>
                 </div>
 
-                <div class="status-cell">
-                    <span class="status-label">Resolution</span>
-                    <span class="status-value muted" id="statRes-${i}">—</span>
+                <div class="stat-card">
+                    <span class="stat-label">Resolution</span>
+                    <span class="stat-value muted" id="statRes-${i}">—</span>
                 </div>
 
-                <div class="status-cell">
-                    <span class="status-label">Frame Rate</span>
-                    <span class="status-value muted" id="statFPS-${i}">—</span>
+                <div class="stat-card">
+                    <span class="stat-label">Frame Rate</span>
+                    <span class="stat-value muted" id="statFPS-${i}">—</span>
                 </div>
 
-                <!-- Motion row — spans both columns -->
-                <div class="status-cell">
-                    <div class="motion-row-left">
-                        <span class="status-label">Motion Detection</span>
+                <div class="stat-card motion-card">
+                    <span class="stat-label">Motion Detection</span>
+                    <div class="motion-header">
                         <div class="motion-indicator">
                             <span class="motion-dot" id="mDot-${i}"></span>
-                            <span id="mLabel-${i}" style="color:#1db954;">INITIALIZING…</span>
+                            <span class="motion-label-text" id="mLabel-${i}">INITIALIZING…</span>
                         </div>
-                        <span class="motion-timestamp" id="mTime-${i}"></span>
-                    </div>
-                    <div class="motion-row-right">
                         <button class="clear-btn" onclick="clearMotion(${i})">CLEAR</button>
                     </div>
+                    <span class="motion-timestamp" id="mTime-${i}"></span>
                 </div>
 
             </div>
@@ -289,7 +294,7 @@ function renderFeeds(cameras) {
     setTimeout(() => cameras.forEach((_, i) => startFeed(i)), 50);
 }
 
-// ── Poll frames ───────────────────────────────────────────────────────────
+// ── Poll frames ───────────────────────────────────────────────
 function startFeed(i) {
     const proxyBase = `/cctv-proxy?index=${i}`;
 
@@ -303,7 +308,6 @@ function startFeed(i) {
             const label = document.getElementById(`liveLabel-${i}`);
             if (!wrap) return;
 
-            // First frame — build the img element
             let liveImg = document.getElementById(`liveImg-${i}`);
             if (!liveImg) {
                 wrap.innerHTML = `
@@ -316,10 +320,9 @@ function startFeed(i) {
             liveImg.src = img.src;
             document.getElementById(`feedStatus-${i}`).textContent =
                 new Date().toLocaleTimeString();
-            dot.className    = 'dot red';
-            label.textContent = 'LIVE';
+            dot.className     = 'dot red';
+            label.textContent = 'Live';
 
-            // Update status panel
             updateStats(i, img);
             runMotion(i, liveImg);
         };
@@ -329,18 +332,10 @@ function startFeed(i) {
             const label = document.getElementById(`liveLabel-${i}`);
             const wrap  = document.getElementById(`feedWrap-${i}`);
             if (!dot || !label) return;
-            dot.className    = 'dot grey';
+            dot.className     = 'dot grey';
             label.textContent = 'OFFLINE';
 
-            // Status panel — offline state
-            const statStatus = document.getElementById(`statStatus-${i}`);
-            const statAI     = document.getElementById(`statAI-${i}`);
-            const statRes    = document.getElementById(`statRes-${i}`);
-            const statFPS    = document.getElementById(`statFPS-${i}`);
-            if (statStatus) { statStatus.textContent = 'OFFLINE'; statStatus.className = 'status-value red'; }
-            if (statAI)     { statAI.textContent = 'INACTIVE';    statAI.className     = 'status-value muted'; }
-            if (statRes)    { statRes.textContent  = '—';          statRes.className    = 'status-value muted'; }
-            if (statFPS)    { statFPS.textContent  = '—';          statFPS.className    = 'status-value muted'; }
+            setStatOffline(i);
 
             if (!document.getElementById(`liveImg-${i}`) && wrap) {
                 wrap.innerHTML =
@@ -357,17 +352,15 @@ function startFeed(i) {
     feedIntervals[i] = setInterval(pullFrame, REFRESH_MS);
 }
 
-// ── Update Camera Status / Resolution / FPS cells ────────────────────────
+// ── Stat helpers ──────────────────────────────────────────────
 function updateStats(i, img) {
     const stat = frameStats[i];
     if (!stat) return;
 
-    // Resolution (from natural image size)
     const w = img.naturalWidth  || img.width;
     const h = img.naturalHeight || img.height;
     if (w && h) { stat.width = w; stat.height = h; }
 
-    // FPS counter — frames in the last second
     stat.frameCount++;
     const now = Date.now();
     if (now - stat.lastSecond >= 1000) {
@@ -376,20 +369,29 @@ function updateStats(i, img) {
         stat.lastSecond = now;
     }
 
-    const statStatus = document.getElementById(`statStatus-${i}`);
-    const statAI     = document.getElementById(`statAI-${i}`);
-    const statRes    = document.getElementById(`statRes-${i}`);
-    const statFPS    = document.getElementById(`statFPS-${i}`);
+    const elStatus = document.getElementById(`statStatus-${i}`);
+    const elAI     = document.getElementById(`statAI-${i}`);
+    const elRes    = document.getElementById(`statRes-${i}`);
+    const elFPS    = document.getElementById(`statFPS-${i}`);
 
-    if (statStatus) { statStatus.textContent = 'ONLINE';  statStatus.className = 'status-value green'; }
-    if (statAI)     { statAI.textContent = 'ACTIVE';      statAI.className     = 'status-value green'; }
-    if (statRes && stat.width)  statRes.textContent  = `${stat.width}×${stat.height}`;
-    if (statFPS && stat.fps)    statFPS.textContent  = `${stat.fps} FPS`;
-    if (statRes)    statRes.className  = 'status-value';
-    if (statFPS)    statFPS.className  = 'status-value';
+    if (elStatus) { elStatus.textContent = 'ONLINE';  elStatus.className = 'stat-value green'; }
+    if (elAI)     { elAI.textContent     = 'ACTIVE';  elAI.className     = 'stat-value green'; }
+    if (elRes)    { elRes.textContent    = stat.width ? `${stat.width}×${stat.height}` : '—'; elRes.className = 'stat-value'; }
+    if (elFPS)    { elFPS.textContent    = stat.fps   ? `${stat.fps} FPS` : '—';               elFPS.className = 'stat-value'; }
 }
 
-// ── Motion detection ──────────────────────────────────────────────────────
+function setStatOffline(i) {
+    const elStatus = document.getElementById(`statStatus-${i}`);
+    const elAI     = document.getElementById(`statAI-${i}`);
+    const elRes    = document.getElementById(`statRes-${i}`);
+    const elFPS    = document.getElementById(`statFPS-${i}`);
+    if (elStatus) { elStatus.textContent = 'OFFLINE';  elStatus.className = 'stat-value red'; }
+    if (elAI)     { elAI.textContent     = 'INACTIVE'; elAI.className     = 'stat-value muted'; }
+    if (elRes)    { elRes.textContent    = '—';         elRes.className    = 'stat-value muted'; }
+    if (elFPS)    { elFPS.textContent    = '—';         elFPS.className    = 'stat-value muted'; }
+}
+
+// ── Motion detection ──────────────────────────────────────────
 function runMotion(i, imgEl) {
     const canvas = document.getElementById(`motionCanvas-${i}`);
     if (!canvas) return;
@@ -410,7 +412,7 @@ function runMotion(i, imgEl) {
         }
         state.prevData = frame;
         setMotion(i, (diff / (160 * 90) * 100) > MOTION_THRESHOLD);
-    } catch (e) { /* cross-origin handled by proxy */ }
+    } catch (e) {}
 }
 
 function setMotion(i, detected) {
@@ -420,30 +422,30 @@ function setMotion(i, detected) {
     const state = motionStates[i];
     if (!dot || !label) return;
 
-    // First time we get a result — mark AI as initialized
     if (!state.initialized) {
         state.initialized = true;
-        label.textContent = 'NO MOTION DETECTED';
-        label.style.color = '#1db954';
+        dot.className         = 'motion-dot';
+        label.textContent     = 'NO MOTION DETECTED';
+        label.className       = 'motion-label-text';
         if (tEl) tEl.textContent = `${new Date().toLocaleTimeString()}  Motion detection system online`;
     }
 
     if (detected && !state.active) {
-        state.active          = true;
-        state.lastEventTime   = new Date();
-        dot.className         = 'motion-dot alert';
-        label.textContent     = 'MOTION DETECTED';
-        label.style.color     = '#e74c3c';
+        state.active        = true;
+        state.lastEventTime = new Date();
+        dot.className       = 'motion-dot alert';
+        label.textContent   = 'MOTION DETECTED';
+        label.className     = 'motion-label-text alert';
         if (tEl) tEl.textContent = `${state.lastEventTime.toLocaleTimeString()}  Motion event triggered`;
     }
     if (detected && state.timeout) { clearTimeout(state.timeout); state.timeout = null; }
     if (!detected && state.active && !state.timeout) {
         state.timeout = setTimeout(() => {
-            state.active      = false;
-            state.timeout     = null;
-            dot.className     = 'motion-dot';
+            state.active    = false;
+            state.timeout   = null;
+            dot.className   = 'motion-dot';
             label.textContent = 'NO MOTION DETECTED';
-            label.style.color = '#1db954';
+            label.className = 'motion-label-text';
             if (tEl && state.lastEventTime)
                 tEl.textContent = `${state.lastEventTime.toLocaleTimeString()}  Last motion event`;
         }, 1500);
@@ -453,14 +455,14 @@ function setMotion(i, detected) {
 function clearMotion(i) {
     const state = motionStates[i];
     if (!state) return;
-    state.active  = false;
+    state.active   = false;
     state.prevData = null;
     if (state.timeout) { clearTimeout(state.timeout); state.timeout = null; }
     const dot   = document.getElementById(`mDot-${i}`);
     const label = document.getElementById(`mLabel-${i}`);
     const tEl   = document.getElementById(`mTime-${i}`);
     if (dot)   dot.className     = 'motion-dot';
-    if (label) { label.textContent = 'NO MOTION DETECTED'; label.style.color = '#1db954'; }
+    if (label) { label.textContent = 'NO MOTION DETECTED'; label.className = 'motion-label-text'; }
     if (tEl)   tEl.textContent   = `${new Date().toLocaleTimeString()}  Cleared by operator`;
 }
 
