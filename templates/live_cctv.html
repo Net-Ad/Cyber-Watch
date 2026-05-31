@@ -7,72 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ---- CCTV IP Camera Styles ---- */
-        .cctv-config-bar {
-            background: var(--card-bg, #1a1a2e);
-            border: 1px solid var(--border-color, #2a2a4a);
-            border-radius: 10px;
-            padding: 18px 22px;
-            margin-bottom: 22px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: flex-end;
-        }
-        .cctv-config-bar h3 {
-            width: 100%;
-            margin: 0 0 6px 0;
-            font-size: 13px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--text-muted, #888);
-        }
-        .cam-input-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            flex: 1;
-        }
-        .cam-input-group input {
-            background: var(--input-bg, #0d0d1a);
-            border: 1px solid var(--border-color, #2a2a4a);
-            border-radius: 6px;
-            color: var(--text-primary, #e0e0ff);
-            padding: 8px 12px;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .cam-input-group input:focus { border-color: #4f8cff; }
-        .cam-input-group input.cam-name-input { width: 140px; }
-        .cam-input-group input.cam-url-input  { flex: 1; min-width: 220px; }
-        .btn-add-cam, .btn-save-config, .btn-remove-cam {
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 13px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
-        .btn-add-cam    { background: #2d6aff; color: #fff; }
-        .btn-save-config{ background: #1db954; color: #fff; }
-        .btn-remove-cam { background: #c0392b; color: #fff; padding: 5px 10px; font-size: 12px; }
-        .btn-add-cam:hover, .btn-save-config:hover, .btn-remove-cam:hover { opacity: 0.85; }
-
-        .cameras-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-        .camera-row {
-            display: flex; gap: 10px; align-items: center;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border-color, #2a2a4a);
-            border-radius: 7px;
-            padding: 8px 12px;
-        }
-        .camera-row .cam-row-name { font-weight: 600; color: #7eb8ff; min-width: 110px; font-size: 13px; }
-        .camera-row .cam-row-url  { flex: 1; font-size: 12px; color: var(--text-muted, #888); word-break: break-all; }
-
-        /* Multi-camera feed grid */
+        /* ── Feed grid ── */
         .cctv-feeds-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
@@ -85,14 +20,16 @@
             overflow: hidden;
         }
         .feed-card-header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 12px 16px;
             border-bottom: 1px solid var(--border-color, #2a2a4a);
         }
-        .feed-card-header h3 { margin: 0; font-size: 13px; letter-spacing: 1px; }
+        .feed-card-header h3 { margin: 0; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
         .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot.red { background: #e74c3c; animation: blink 1s infinite; }
+        .dot.red  { background: #e74c3c; animation: blink 1s infinite; }
         .dot.grey { background: #555; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
@@ -101,13 +38,12 @@
             width: 100%;
             background: #0a0a16;
             min-height: 240px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .feed-img-wrap img {
-            width: 100%; height: auto;
-            display: block;
-            border: none;
-        }
+        .feed-img-wrap img { width: 100%; height: auto; display: block; }
+
         .feed-overlay-status {
             position: absolute; bottom: 8px; left: 10px;
             font-size: 11px; color: rgba(255,255,255,0.55);
@@ -115,19 +51,13 @@
             padding: 2px 8px; border-radius: 4px;
         }
         .feed-error {
-            color: #e74c3c;
-            font-size: 13px;
-            text-align: center;
-            padding: 30px 20px;
+            color: #e74c3c; font-size: 13px;
+            text-align: center; padding: 30px 20px;
         }
         .feed-connecting {
             color: var(--text-muted, #888);
-            font-size: 13px;
-            padding: 30px;
-            text-align: center;
+            font-size: 13px; padding: 30px; text-align: center;
         }
-
-        /* Motion detection widget per camera */
         .feed-footer {
             padding: 10px 16px;
             border-top: 1px solid var(--border-color, #2a2a4a);
@@ -136,25 +66,6 @@
         }
         .motion-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #1db954; }
         .motion-dot.alert { background: #e74c3c; animation: blink 0.5s infinite; }
-
-        .no-cameras-msg {
-            text-align: center;
-            color: var(--text-muted, #888);
-            padding: 40px 20px;
-            font-size: 14px;
-        }
-
-        /* Config status toast */
-        #config-toast {
-            position: fixed; bottom: 24px; right: 24px;
-            background: #1db954; color: #fff;
-            padding: 10px 22px; border-radius: 8px;
-            font-size: 13px; font-weight: 600;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 9999;
-        }
-        #config-toast.show { opacity: 1; }
     </style>
 </head>
 <body>
@@ -188,119 +99,58 @@
             </div>
         </header>
 
-        <!-- ── Camera Configuration Panel ── -->
-        <div class="cctv-config-bar">
-            <h3>📷 IP Camera Configuration</h3>
-
-            <div class="cam-input-group">
-                <input type="text" id="newCamName" class="cam-name-input" placeholder="Camera Name (e.g. Gate 1)">
-                <input type="text" id="newCamUrl"  class="cam-url-input"
-                       placeholder="Stream URL (e.g. http://192.168.1.100/video or /snapshot.jpg)">
-                <button class="btn-add-cam" onclick="addCamera()">+ Add Camera</button>
-                <button class="btn-save-config" onclick="saveConfig()">💾 Save &amp; Apply</button>
-            </div>
-
-            <div class="cameras-list" id="camerasList"></div>
-        </div>
-
         <!-- ── Live Feed Grid ── -->
         <div id="feedsContainer">
-            <p class="no-cameras-msg" id="noCamerasMsg">
-                No cameras configured yet.<br>
-                Enter the IP address or URL of your school CCTV above and click <strong>Save &amp; Apply</strong>.
+            <p style="text-align:center;color:var(--text-muted,#888);padding:40px;">
+                Loading cameras…
             </p>
         </div>
     </main>
 </div>
 
-<div id="config-toast">✓ Camera config saved</div>
-
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 <script>
 // ============================================================
-//  IP CCTV Manager
+//  Hardcoded-camera CCTV viewer
+//  Cameras are defined server-side in app.py → CAMERAS list.
+//  The client fetches the list once, then polls each camera
+//  via /cctv-proxy?index=<N> (server proxies to the real URL).
 // ============================================================
 
-let cameras = [];          // { name, url }
-let feedIntervals = {};    // intervalId per camera index
-let motionStates  = {};    // { prevData, active, timeout } per index
-const REFRESH_MS  = 400;   // snapshot pull interval (ms)
-const MOTION_THRESHOLD = 3.5; // % of pixels changed
-const PIXEL_DIFF       = 20;  // per-channel diff threshold
+let feedIntervals = {};   // intervalId keyed by camera index
+let motionStates  = {};   // motion state keyed by camera index
 
-// ---- Init: load saved config from server ----
-async function loadConfig() {
+const REFRESH_MS        = 400;   // snapshot poll interval (ms)
+const MOTION_THRESHOLD  = 3.5;   // % changed pixels to trigger alert
+const PIXEL_DIFF        = 20;    // per-channel difference threshold
+
+// ── Boot: fetch camera list then render ───────────────────────────────────
+async function init() {
     try {
-        const r = await fetch('/cctv-config');
+        const r    = await fetch('/cctv-cameras');
         const data = await r.json();
-        cameras = data.cameras || [];
-        renderCameraList();
-        renderFeeds();
-    } catch(e) {
-        console.error('Config load error:', e);
+        renderFeeds(data.cameras || []);
+    } catch (e) {
+        document.getElementById('feedsContainer').innerHTML =
+            '<p style="color:#e74c3c;text-align:center;padding:40px;">Failed to load camera list.</p>';
     }
 }
 
-// ---- Add a camera entry (local only until Save) ----
-function addCamera() {
-    const name = document.getElementById('newCamName').value.trim();
-    const url  = document.getElementById('newCamUrl').value.trim();
-    if (!name || !url) { alert('Please enter both a camera name and stream URL.'); return; }
-    cameras.push({ name, url });
-    document.getElementById('newCamName').value = '';
-    document.getElementById('newCamUrl').value  = '';
-    renderCameraList();
-}
-
-function removeCamera(i) {
-    cameras.splice(i, 1);
-    renderCameraList();
-}
-
-function renderCameraList() {
-    const list = document.getElementById('camerasList');
-    if (!cameras.length) { list.innerHTML = ''; return; }
-    list.innerHTML = cameras.map((c, i) => `
-        <div class="camera-row">
-            <span class="cam-row-name">${escHtml(c.name)}</span>
-            <span class="cam-row-url">${escHtml(c.url)}</span>
-            <button class="btn-remove-cam" onclick="removeCamera(${i})">✕</button>
-        </div>`).join('');
-}
-
-// ---- Save config to server & start feeds ----
-async function saveConfig() {
-    try {
-        await fetch('/cctv-config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cameras })
-        });
-        showToast('✓ Camera config saved');
-        renderFeeds();
-    } catch(e) {
-        alert('Failed to save config: ' + e.message);
-    }
-}
-
-// ---- Render live feed cards ----
-function renderFeeds() {
-    // Stop all existing intervals
+// ── Build feed cards for every camera ────────────────────────────────────
+function renderFeeds(cameras) {
     Object.values(feedIntervals).forEach(clearInterval);
     feedIntervals = {};
     motionStates  = {};
 
     const container = document.getElementById('feedsContainer');
-    const noMsg     = document.getElementById('noCamerasMsg');
 
     if (!cameras.length) {
-        container.innerHTML = '';
-        if (noMsg) { noMsg.style.display = 'block'; container.appendChild(noMsg); }
+        container.innerHTML =
+            '<p style="text-align:center;color:var(--text-muted,#888);padding:40px;">No cameras configured.</p>';
         return;
     }
-    if (noMsg) noMsg.style.display = 'none';
 
-    container.innerHTML = `<div class="cctv-feeds-grid" id="feedsGrid"></div>`;
+    container.innerHTML = '<div class="cctv-feeds-grid" id="feedsGrid"></div>';
     const grid = document.getElementById('feedsGrid');
 
     cameras.forEach((cam, i) => {
@@ -316,7 +166,7 @@ function renderFeeds() {
                 </div>
             </div>
             <div class="feed-img-wrap" id="feedWrap-${i}">
-                <p class="feed-connecting">Connecting to ${escHtml(cam.url)}…</p>
+                <p class="feed-connecting">Connecting…</p>
                 <canvas id="motionCanvas-${i}" style="display:none;"></canvas>
             </div>
             <div class="feed-footer">
@@ -326,24 +176,25 @@ function renderFeeds() {
         </div>`;
     });
 
-    // Start pulling frames after DOM is ready
-    setTimeout(() => cameras.forEach((cam, i) => startFeed(i, cam)), 50);
+    // Give the DOM a tick to paint, then start polling
+    setTimeout(() => cameras.forEach((_, i) => startFeed(i)), 50);
 }
 
-// ---- Pull snapshots from a single camera via server proxy ----
-function startFeed(i, cam) {
-    const proxyUrl = `/cctv-proxy?url=${encodeURIComponent(cam.url)}`;
+// ── Poll one camera via the index-based proxy ─────────────────────────────
+function startFeed(i) {
+    // /cctv-proxy?index=N  — server resolves the real URL internally
+    const proxyBase = `/cctv-proxy?index=${i}`;
 
     function pullFrame() {
         const img = new Image();
         const ts  = Date.now();
+
         img.onload = () => {
             const wrap  = document.getElementById(`feedWrap-${i}`);
             const dot   = document.getElementById(`liveDot-${i}`);
             const label = document.getElementById(`liveLabel-${i}`);
             if (!wrap) return;
 
-            // Replace wrap content with the live image
             let liveImg = document.getElementById(`liveImg-${i}`);
             if (!liveImg) {
                 wrap.innerHTML = `
@@ -352,38 +203,39 @@ function startFeed(i, cam) {
                     <canvas id="motionCanvas-${i}" style="display:none;"></canvas>`;
                 liveImg = document.getElementById(`liveImg-${i}`);
             }
+
             liveImg.src = img.src;
             document.getElementById(`feedStatus-${i}`).textContent =
                 new Date().toLocaleTimeString();
-            dot.className   = 'dot red';
+            dot.className    = 'dot red';
             label.textContent = 'LIVE';
 
-            // Motion detection
             runMotion(i, liveImg);
         };
+
         img.onerror = () => {
-            const wrap  = document.getElementById(`feedWrap-${i}`);
             const dot   = document.getElementById(`liveDot-${i}`);
             const label = document.getElementById(`liveLabel-${i}`);
-            if (!wrap) return;
-            const existing = document.getElementById(`liveImg-${i}`);
-            if (!existing) {
-                wrap.innerHTML = `<p class="feed-error">⚠ Cannot reach camera<br>
-                    <small style="color:#888;">${escHtml(cam.url)}</small><br>
-                    <small style="color:#666;margin-top:8px;display:block;">
-                    Check that the URL is accessible from the server.</small></p>`;
-            }
-            dot.className   = 'dot grey';
+            const wrap  = document.getElementById(`feedWrap-${i}`);
+            if (!dot || !label) return;
+            dot.className    = 'dot grey';
             label.textContent = 'OFFLINE';
+            if (!document.getElementById(`liveImg-${i}`) && wrap) {
+                wrap.innerHTML =
+                    '<p class="feed-error">⚠ Camera offline or unreachable.<br>' +
+                    '<small style="color:#666;margin-top:8px;display:block;">' +
+                    'Check the URL defined in app.py → CAMERAS.</small></p>';
+            }
         };
-        img.src = `${proxyUrl}&_t=${ts}`;
+
+        img.src = `${proxyBase}&_t=${ts}`;
     }
 
     pullFrame();
     feedIntervals[i] = setInterval(pullFrame, REFRESH_MS);
 }
 
-// ---- Canvas-based motion detection ----
+// ── Canvas-based motion detection ────────────────────────────────────────
 function runMotion(i, imgEl) {
     const canvas = document.getElementById(`motionCanvas-${i}`);
     if (!canvas) return;
@@ -403,9 +255,8 @@ function runMotion(i, imgEl) {
             if (d > PIXEL_DIFF) diff++;
         }
         state.prevData = frame;
-        const pct = diff / (160 * 90) * 100;
-        setMotion(i, pct > MOTION_THRESHOLD);
-    } catch(e) { /* cross-origin image taint is handled by proxy */ }
+        setMotion(i, (diff / (160 * 90) * 100) > MOTION_THRESHOLD);
+    } catch (e) { /* cross-origin taint handled by proxy */ }
 }
 
 function setMotion(i, detected) {
@@ -415,36 +266,30 @@ function setMotion(i, detected) {
     if (!dot || !label) return;
 
     if (detected && !state.active) {
-        state.active = true;
-        dot.className   = 'motion-dot alert';
+        state.active      = true;
+        dot.className     = 'motion-dot alert';
         label.textContent = '⚠ MOTION DETECTED';
         label.style.color = '#e74c3c';
     }
     if (detected && state.timeout) { clearTimeout(state.timeout); state.timeout = null; }
     if (!detected && state.active && !state.timeout) {
         state.timeout = setTimeout(() => {
-            state.active  = false;
-            state.timeout = null;
-            dot.className   = 'motion-dot';
+            state.active      = false;
+            state.timeout     = null;
+            dot.className     = 'motion-dot';
             label.textContent = 'No motion detected';
             label.style.color = '';
         }, 1500);
     }
 }
 
-// ---- Helpers ----
 function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function showToast(msg) {
-    const t = document.getElementById('config-toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2800);
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ---- Boot ----
-loadConfig();
+init();
 </script>
 </body>
 </html>

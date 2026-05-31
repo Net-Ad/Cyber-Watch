@@ -19,11 +19,16 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
 latest_frame = None
 frame_lock = threading.Lock()
 
-# CCTV camera configuration (stored in memory; persists while server runs)
-cctv_config = {
-    "cameras": []
-}
-cctv_config_lock = threading.Lock()
+# ── Hardcoded CCTV cameras ──────────────────────────────────────────────────
+# To add or change cameras, edit this list directly.
+# Each entry: { "name": "<label>", "url": "<MJPEG or snapshot URL>" }
+CAMERAS = [
+    {"name": "Main Entrance",  "url": "http://192.168.1.101/video"},
+    {"name": "Hallway Cam",    "url": "http://192.168.1.102/video"},
+    {"name": "Parking Lot",    "url": "http://192.168.1.103/video"},
+    {"name": "Server Room",    "url": "http://192.168.1.104/video"},
+]
+# ───────────────────────────────────────────────────────────────────────────
 
 def get_device_id():
 
@@ -330,40 +335,21 @@ def video_feed():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route("/cctv-config", methods=["GET", "POST"])
-def cctv_config_route():
-    """Save or retrieve IP camera configuration."""
+@app.route("/cctv-cameras")
+def cctv_cameras():
+    """Return the hardcoded camera list (read-only)."""
     if "user" not in session:
         return jsonify({"error": "Unauthorized"}), 403
-
-    global cctv_config
-
-    if request.method == "POST":
-        data = request.get_json()
-        cameras = data.get("cameras", [])
-        # Validate: each camera needs a name and url
-        validated = []
-        for cam in cameras:
-            url = cam.get("url", "").strip()
-            name = cam.get("name", "").strip()
-            if url and name:
-                validated.append({"name": name, "url": url})
-        with cctv_config_lock:
-            cctv_config["cameras"] = validated
-        return jsonify({"status": "ok", "cameras": validated})
-
-    with cctv_config_lock:
-        return jsonify(cctv_config)
+    return jsonify({"cameras": CAMERAS})
 
 
 @app.route("/cctv-proxy")
 def cctv_proxy():
     """
-    Proxy a single JPEG snapshot from an IP camera URL.
-    Supports:
-      - MJPEG HTTP streams  (grabs one frame)
-      - Snapshot URLs       (direct JPEG/PNG)
-    Query param: url=<camera stream or snapshot url>
+    Proxy a single JPEG snapshot from a hardcoded camera.
+    Query param: index=<camera index in CAMERAS list>
+    Only whitelisted (hardcoded) camera URLs are proxied — arbitrary
+    URLs cannot be passed in by the client.
     """
     if "user" not in session:
         return "Unauthorized", 403
@@ -371,41 +357,37 @@ def cctv_proxy():
     if http_requests is None:
         return "requests library not installed on server", 503
 
-    cam_url = request.args.get("url", "").strip()
-    if not cam_url:
-        return "Missing url parameter", 400
+    try:
+        idx = int(request.args.get("index", -1))
+    except (ValueError, TypeError):
+        return "Invalid index", 400
+
+    if idx < 0 or idx >= len(CAMERAS):
+        return "Camera not found", 404
+
+    cam_url = CAMERAS[idx]["url"]
 
     try:
         resp = http_requests.get(cam_url, stream=True, timeout=5)
         content_type = resp.headers.get("Content-Type", "")
 
         if "multipart" in content_type:
-            # MJPEG stream — read until we get one complete JPEG frame
-            boundary = None
-            for part in content_type.split(";"):
-                part = part.strip()
-                if part.startswith("boundary="):
-                    boundary = part[len("boundary="):]
-                    break
-
+            # MJPEG stream — extract one complete JPEG frame
             buf = b""
             for chunk in resp.iter_content(chunk_size=4096):
                 buf += chunk
-                # Look for JPEG start/end markers
                 start = buf.find(b'\xff\xd8')
-                end = buf.find(b'\xff\xd9')
+                end   = buf.find(b'\xff\xd9')
                 if start != -1 and end != -1 and end > start:
-                    jpeg = buf[start:end + 2]
-                    return Response(jpeg, mimetype="image/jpeg")
+                    return Response(buf[start:end + 2], mimetype="image/jpeg")
                 if len(buf) > 200000:
                     break
             return "Could not extract frame from MJPEG stream", 502
 
         else:
-            # Direct image (JPEG/PNG snapshot URL)
-            image_data = resp.content
+            # Direct JPEG/PNG snapshot URL
             mime = content_type.split(";")[0].strip() or "image/jpeg"
-            return Response(image_data, mimetype=mime)
+            return Response(resp.content, mimetype=mime)
 
     except Exception as e:
         return f"Camera unreachable: {str(e)}", 502
