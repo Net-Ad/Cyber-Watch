@@ -6,7 +6,10 @@ import threading
 import blocker
 import detector
 import os
-import requests as http_requests
+try:
+    import requests as http_requests
+except ImportError:
+    http_requests = None
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -364,6 +367,9 @@ def cctv_proxy():
     """
     if "user" not in session:
         return "Unauthorized", 403
+
+    if http_requests is None:
+        return "requests library not installed on server", 503
 
     cam_url = request.args.get("url", "").strip()
     if not cam_url:
