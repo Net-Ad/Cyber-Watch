@@ -3,37 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics</title>
+    <title>Analytics - Cyber Watch</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .analytics-tabs {
-            display: flex; gap: 8px; margin-bottom: 18px;
-        }
-        .tab-btn {
-            padding: 8px 20px; border-radius: 8px; border: 1px solid #2d3f55;
-            background: #1e2a3a; color: #94a3b8; font-size: 12px;
-            cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s;
-        }
-        .tab-btn:hover { border-color: #00d4ff; color: #00d4ff; }
-        .tab-btn.active { background: #00d4ff22; border-color: #00d4ff; color: #00d4ff; }
-        .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-        .chart-box {
-            background: #0d1b2a; border: 1px solid #1e3a5f;
-            border-radius: 12px; padding: 16px;
-        }
-        .chart-box h4 {
-            font-size: 11px; color: #64748b; font-family: 'Orbitron', sans-serif;
-            letter-spacing: 0.8px; margin-bottom: 12px;
-        }
-        .chart-box.full { grid-column: 1 / -1; }
-    </style>
 </head>
 <body>
+
 <div class="dashboard">
     <aside class="sidebar">
-        <div class="logo-area"><h1>CYBER</h1><h1 class="logo-accent">WATCH</h1></div>
+        <div class="logo-area">
+            <h1>CYBER<span class="logo-accent">WATCH</span></h1>
+        </div>
+        <div class="sidebar-clock"><div id="live-clock"></div></div>
         <nav>
             <a href="/dashboard">Dashboard</a>
             <a href="/live-cctv">Live CCTV</a>
@@ -44,161 +26,170 @@
     </aside>
 
     <main class="main-content">
-        <div class="topbar">
+        <header class="topbar">
             <div class="topbar-left">
-                <h2>Analytics</h2>
-                <p id="system-status">AI Surveillance Active • Real-time Monitoring Enabled</p>
+                <h2 class="page-title">Analytics</h2>
+                <p class="text-muted">Monitoring CCTV Channels</p>
             </div>
             <div class="topbar-right">
-                <div id="live-clock"></div>
                 <div class="profile-box">
-                    <div class="status-dot"></div>
-                    <span>{{ user }}</span>
+                    <span class="status-dot green"></span>
+                    <span>{{ user | default('admin') }}</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="analytics-stats-grid">
+            <div class="stat-card">
+                <h3>Successful Logins</h3>
+                <h1 class="accent-text">{{ success_count | default('108') }}</h1>
+                <p class="trend positive">▲ All time</p>
+            </div>
+            <div class="stat-card">
+                <h3>Failed Attempts</h3>
+                <h1 class="accent-text">{{ failed_count | default('392') }}</h1>
+                <p class="trend negative">▼ All time</p>
+            </div>
+            <div class="stat-card">
+                <h3>Blocked Devices</h3>
+                <h1 class="accent-text">{{ blocked_count | default('0') }}</h1>
+                <p class="trend warning">— Total blocked</p>
+            </div>
+        </section>
+
+        <div class="timeframe-tabs">
+            <button class="tab active">Weekly</button>
+            <button class="tab">Monthly</button>
+            <button class="tab">All Time</button>
+        </div>
+
+        <div class="chart-container large-chart">
+            <div class="section-header">
+                <h3 class="muted-title">LOGIN ACTIVITY – LAST 7 DAYS</h3>
+                <div style="display: flex; align-items: center;">
+                    <label class="chart-checkbox-label">
+                        <input type="checkbox" id="toggleSuccess" class="chart-checkbox success" checked>
+                        Successful Logins
+                    </label>
+                    <label class="chart-checkbox-label" style="margin-right:0;">
+                        <input type="checkbox" id="toggleFailed" class="chart-checkbox failed" checked>
+                        Failed Attempts
+                    </label>
+                </div>
+            </div>
+            <div style="height: 350px;">
+                <canvas id="loginLineChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bottom-charts-grid">
+            <div class="chart-container">
+                <div class="section-header">
+                    <h3 class="muted-title">SUCCESS VS FAILED</h3>
+                    <div style="display: flex; align-items: center;">
+                        <label class="chart-checkbox-label">
+                            <input type="checkbox" id="toggleDonutSuccess" class="chart-checkbox success" checked>
+                            Success
+                        </label>
+                        <label class="chart-checkbox-label" style="margin-right: 0;">
+                            <input type="checkbox" id="toggleDonutFailed" class="chart-checkbox failed" checked>
+                            Failed
+                        </label>
+                    </div>
+                </div>
+                <div style="height: 300px; display: flex; justify-content: center;">
+                    <canvas id="doughnutChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="section-header">
+                    <h3 class="muted-title">EVENT BREAKDOWN</h3>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="barChart"></canvas>
                 </div>
             </div>
         </div>
-
-        <!-- Stat cards -->
-        <div class="analytics-grid">
-            <div class="analytics-card">
-                <h3>Successful Logins</h3>
-                <h1>{{ success_count }}</h1>
-                <p style="font-size:11px;color:#3fb950;margin-top:4px;">▲ All time</p>
-            </div>
-            <div class="analytics-card">
-                <h3>Failed Attempts</h3>
-                <h1>{{ failed_count }}</h1>
-                <p style="font-size:11px;color:#ef4444;margin-top:4px;">⚠ All time</p>
-            </div>
-            <div class="analytics-card">
-                <h3>Blocked Devices</h3>
-                <h1>{{ blocked_count }}</h1>
-                <p style="font-size:11px;color:#f59e0b;margin-top:4px;">— Total blocked</p>
-            </div>
-        </div>
-
-        <!-- Period tabs -->
-        <div class="analytics-tabs">
-            <button class="tab-btn active" onclick="switchPeriod('weekly', this)">Weekly</button>
-            <button class="tab-btn" onclick="switchPeriod('monthly', this)">Monthly</button>
-            <button class="tab-btn" onclick="switchPeriod('alltime', this)">All Time</button>
-        </div>
-
-        <!-- Charts -->
-        <div class="chart-row">
-            <div class="chart-box full">
-                <h4>LOGIN ACTIVITY — <span id="period-label">LAST 7 DAYS</span></h4>
-                <canvas id="activityChart" height="80"></canvas>
-            </div>
-            <div class="chart-box">
-                <h4>SUCCESS VS FAILED</h4>
-                <canvas id="donutChart" height="160"></canvas>
-            </div>
-            <div class="chart-box">
-                <h4>EVENT BREAKDOWN</h4>
-                <canvas id="breakdownChart" height="160"></canvas>
-            </div>
-        </div>
-
     </main>
 </div>
 
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 <script>
-const successCount = Number("{{ success_count }}");
-const failedCount  = Number("{{ failed_count }}");
-const blockedCount = Number("{{ blocked_count }}");
+document.addEventListener("DOMContentLoaded", function() {
+    const colorSuccess = "#3fb950"; const colorFailed = "#f85149"; const colorBlocked = "#d29922"; 
+    const colorGrid = "#30363d"; const colorText = "#888888";
 
-const chartDefaults = {
-    color: 'white',
-    plugins: { legend: { labels: { color: 'white', font: { family: 'Inter' } } } },
-    scales: {
-        y: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,.06)' } },
-        x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,.06)' } }
+    Chart.defaults.color = colorText; Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const chartData = {
+        weekly: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], successLine: [15, 2, 1, 0, 1, 1, 1], failedLine: [56, 3, 4, 5, 8, 9, 7], totals: [21, 92, 0] },
+        monthly: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], successLine: [45, 32, 50, 41], failedLine: [120, 85, 90, 110], totals: [168, 405, 12] },
+        'all time': { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], successLine: [300, 450, 400, 520, 480, 600], failedLine: [800, 950, 820, 1100, 900, 1200], totals: [2750, 5770, 85] }
+    };
+
+    let lineChart, donutChart, barChart;
+
+    const lineCtx = document.getElementById('loginLineChart');
+    if(lineCtx) {
+        lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.weekly.labels,
+                datasets: [
+                    { label: 'Successful Logins', data: chartData.weekly.successLine, borderColor: colorSuccess, backgroundColor: 'rgba(63, 185, 80, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: colorSuccess },
+                    { label: 'Failed Attempts', data: chartData.weekly.failedLine, borderColor: colorFailed, backgroundColor: 'rgba(248, 81, 73, 0.1)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: colorFailed }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: colorGrid } }, x: { grid: { color: colorGrid } } } }
+        });
+
+        document.getElementById('toggleSuccess').addEventListener('change', function() { lineChart.setDatasetVisibility(0, this.checked); lineChart.update(); });
+        document.getElementById('toggleFailed').addEventListener('change', function() { lineChart.setDatasetVisibility(1, this.checked); lineChart.update(); });
     }
-};
 
-/* ── Donut chart (success vs failed) ── */
-new Chart(document.getElementById('donutChart').getContext('2d'), {
-    type: 'doughnut',
-    data: {
-        labels: ['Success', 'Failed', 'Blocked'],
-        datasets: [{ data: [successCount, failedCount, blockedCount],
-            backgroundColor: ['rgba(34,197,94,0.8)', 'rgba(239,68,68,0.8)', 'rgba(245,158,11,0.8)'],
-            borderColor: ['#22c55e', '#ef4444', '#f59e0b'], borderWidth: 2 }]
-    },
-    options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } } }
-});
+    const donutCtx = document.getElementById('doughnutChart');
+    if(donutCtx) {
+        donutChart = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Success', 'Failed'],
+                datasets: [{ data: [chartData.weekly.totals[0], chartData.weekly.totals[1]], backgroundColor: [colorSuccess, colorFailed], borderWidth: 0, hoverOffset: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { display: false } } }
+        });
 
-/* ── Breakdown bar ── */
-new Chart(document.getElementById('breakdownChart').getContext('2d'), {
-    type: 'bar',
-    data: {
-        labels: ['Success', 'Failed', 'Blocked'],
-        datasets: [{ label: 'Total Events',
-            data: [successCount, failedCount, blockedCount],
-            backgroundColor: ['rgba(34,197,94,0.7)', 'rgba(239,68,68,0.7)', 'rgba(245,158,11,0.7)'],
-            borderColor: ['#22c55e', '#ef4444', '#f59e0b'], borderWidth: 2, borderRadius: 6 }]
-    },
-    options: { ...chartDefaults, responsive: true }
-});
-
-/* ── Activity line chart with period switching ── */
-let activityChart;
-
-const periods = {
-    weekly: {
-        label: 'LAST 7 DAYS',
-        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-        success: [successCount > 7 ? Math.floor(successCount/7) : successCount,
-            ...Array(6).fill(0).map(()=> Math.floor(Math.random()*3))],
-        failed:  [failedCount  > 7 ? Math.floor(failedCount/7)  : failedCount,
-            ...Array(6).fill(0).map(()=> Math.floor(Math.random()*10))]
-    },
-    monthly: {
-        label: 'LAST 30 DAYS',
-        labels: ['W1','W2','W3','W4'],
-        success: [Math.floor(successCount*0.2), Math.floor(successCount*0.3),
-                  Math.floor(successCount*0.25), Math.floor(successCount*0.25)],
-        failed:  [Math.floor(failedCount*0.2),  Math.floor(failedCount*0.35),
-                  Math.floor(failedCount*0.2),  Math.floor(failedCount*0.25)]
-    },
-    alltime: {
-        label: 'ALL TIME',
-        labels: ['Total Success', 'Total Failed', 'Blocked'],
-        success: [successCount, 0, 0],
-        failed:  [0, failedCount, blockedCount]
+        document.getElementById('toggleDonutSuccess').addEventListener('change', function() { if (donutChart.getDataVisibility(0) !== this.checked) { donutChart.toggleDataVisibility(0); donutChart.update(); } });
+        document.getElementById('toggleDonutFailed').addEventListener('change', function() { if (donutChart.getDataVisibility(1) !== this.checked) { donutChart.toggleDataVisibility(1); donutChart.update(); } });
     }
-};
 
-function buildActivityChart(period) {
-    const d = periods[period];
-    document.getElementById('period-label').textContent = d.label;
-    if (activityChart) activityChart.destroy();
-    activityChart = new Chart(document.getElementById('activityChart').getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: d.labels,
-            datasets: [
-                { label: 'Successful Logins', data: d.success,
-                  borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)',
-                  tension: 0.4, fill: true, pointBackgroundColor: '#22c55e' },
-                { label: 'Failed Attempts', data: d.failed,
-                  borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)',
-                  tension: 0.4, fill: true, pointBackgroundColor: '#ef4444' }
-            ]
-        },
-        options: { ...chartDefaults, responsive: true }
+    const barCtx = document.getElementById('barChart');
+    if(barCtx) {
+        barChart = new Chart(barCtx, {
+            type: 'bar',
+            data: { labels: ['Success', 'Failed', 'Blocked'], datasets: [{ label: 'Total Events', data: chartData.weekly.totals, backgroundColor: [colorSuccess, colorFailed, colorBlocked], borderRadius: 4, barPercentage: 0.6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: colorGrid } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    const tabs = document.querySelectorAll('.timeframe-tabs .tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active')); this.classList.add('active');
+            const timeframe = this.textContent.trim().toLowerCase();
+            const newData = chartData[timeframe];
+
+            if (newData) {
+                if(lineChart) { lineChart.data.labels = newData.labels; lineChart.data.datasets[0].data = newData.successLine; lineChart.data.datasets[1].data = newData.failedLine; lineChart.update(); }
+                if(donutChart) { donutChart.data.datasets[0].data = [newData.totals[0], newData.totals[1]]; donutChart.update(); }
+                if(barChart) { barChart.data.datasets[0].data = newData.totals; barChart.update(); }
+                document.querySelectorAll('.stat-card h1')[0].textContent = newData.totals[0];
+                document.querySelectorAll('.stat-card h1')[1].textContent = newData.totals[1];
+                document.querySelectorAll('.stat-card h1')[2].textContent = newData.totals[2];
+            }
+        });
     });
-}
-
-function switchPeriod(period, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    buildActivityChart(period);
-}
-
-buildActivityChart('weekly');
+});
 </script>
 </body>
 </html>

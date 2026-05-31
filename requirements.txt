@@ -9,3 +9,5 @@ Jinja2
 itsdangerous
 click
 blinker
+python-dotenv
+requests

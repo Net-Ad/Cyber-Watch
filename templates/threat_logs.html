@@ -3,149 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Threat Logs</title>
+    <title>Threat Logs - Cyber Watch</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        /* ── Filter bar ── */
-        .filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-        }
-        .filter-bar input[type="text"] {
-            background: #1e2a3a;
-            border: 1px solid #2d3f55;
-            color: #e2e8f0;
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 13px;
-            width: 240px;
-            outline: none;
-        }
-        .filter-bar input[type="text"]::placeholder { color: #4a5568; }
-        .filter-bar input[type="text"]:focus { border-color: #00d4ff; }
-        .filter-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: 1px solid #2d3f55;
-            background: #1e2a3a;
-            color: #94a3b8;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s;
-        }
-        .filter-btn:hover { border-color: #00d4ff; color: #00d4ff; }
-        .filter-btn.active { background: #00d4ff22; border-color: #00d4ff; color: #00d4ff; }
-        .search-btn {
-            padding: 8px 18px;
-            border-radius: 8px;
-            border: none;
-            background: #00d4ff22;
-            color: #00d4ff;
-            font-size: 12px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-        }
-        /* ── Block button in table ── */
-        .btn-block {
-            padding: 4px 12px;
-            border-radius: 6px;
-            border: 1px solid #ef444466;
-            background: transparent;
-            color: #ef4444;
-            font-size: 11px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s;
-        }
-        .btn-block:hover { background: #ef444422; }
-        .btn-block:disabled { opacity: 0.4; cursor: not-allowed; }
-        /* ── Toast notifications ── */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .toast {
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            opacity: 0;
-            transform: translateX(40px);
-            transition: all 0.3s ease;
-            min-width: 280px;
-        }
-        .toast.show { opacity: 1; transform: translateX(0); }
-        .toast.success { background: #0d2b1a; border: 1px solid #22c55e55; color: #22c55e; }
-        .toast.danger  { background: #2b0d0d; border: 1px solid #ef444455; color: #ef4444; }
-        .toast.info    { background: #0d1e2b; border: 1px solid #00d4ff55; color: #00d4ff; }
-        /* ── Result count ── */
-        .result-count { font-size: 12px; color: #4a5568; margin-left: auto; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<div id="toast-container"></div>
 
 <div class="dashboard">
     <aside class="sidebar">
         <div class="logo-area">
-            <h1>CYBER</h1>
-            <h1 class="logo-accent">WATCH</h1>
+            <h1>CYBER<span class="logo-accent">WATCH</span></h1>
         </div>
+        <div class="sidebar-clock"><div id="live-clock"></div></div>
         <nav>
             <a href="/dashboard">Dashboard</a>
             <a href="/live-cctv">Live CCTV</a>
             <a href="/threat-logs" class="active">Threat Logs</a>
             <a href="/analytics">Analytics</a>
         </nav>
-        <div class="sidebar-footer">
-            <a href="/logout">Logout</a>
-        </div>
+        <div class="sidebar-footer"><a href="/logout">Logout</a></div>
     </aside>
 
     <main class="main-content">
-        <div class="topbar">
-            <div>
-                <h2>Threat Logs</h2>
-                <p id="system-status">AI Surveillance Active</p>
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2 class="page-title">Threat Logs</h2>
+                <p class="text-muted">Threat Detection Running</p>
             </div>
             <div class="topbar-right">
-                <div id="live-clock"></div>
                 <div class="profile-box">
-                    <div class="status-dot"></div>
-                    <span class="text-clip">{{ user }}</span>
+                    <span class="status-dot green"></span>
+                    <span>{{ user | default('admin') }}</span>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- ── FEATURE 2: Filter & search bar ── -->
-        <form method="GET" action="/threat-logs">
-            <div class="filter-bar">
-                <input type="text" name="search" placeholder="Search device ID or event…"
-                       value="{{ search_query }}">
-                <button type="submit" class="search-btn">Search</button>
-                <a href="/threat-logs?status=ALL&search={{ search_query }}"
-                   class="filter-btn {% if status_filter == 'ALL' %}active{% endif %}">All</a>
-                <a href="/threat-logs?status=SUCCESS&search={{ search_query }}"
-                   class="filter-btn {% if status_filter == 'SUCCESS' %}active{% endif %}">Success</a>
-                <a href="/threat-logs?status=FAILED&search={{ search_query }}"
-                   class="filter-btn {% if status_filter == 'FAILED' %}active{% endif %}">Failed</a>
-                <a href="/threat-logs?status=BLOCKED&search={{ search_query }}"
-                   class="filter-btn {% if status_filter == 'BLOCKED' %}active{% endif %}">Blocked</a>
-                <span class="result-count">{{ logs|length }} result{% if logs|length != 1 %}s{% endif %}</span>
+        <div class="logs-controls">
+            <div class="search-row">
+                <input type="text" id="logSearch" placeholder="Search device ID or event...">
+                <button id="searchBtn">Search</button>
             </div>
-        </form>
+            
+            <div class="filter-row">
+                <div class="filter-pills">
+                    <button class="filter-pill active" data-filter="all">All</button>
+                    <button class="filter-pill" data-filter="SUCCESS">Success</button>
+                    <button class="filter-pill" data-filter="FAILED">Failed</button>
+                    <button class="filter-pill" data-filter="BLOCKED">Blocked</button>
+                </div>
+                <span class="results-count">{{ logs|length if logs else '0' }} results</span>
+            </div>
+        </div>
 
         <div class="logs-table-container">
             <table class="logs-table">
@@ -155,82 +63,37 @@
                         <th>EVENT</th>
                         <th>STATUS</th>
                         <th>DATE & TIME</th>
-                        <th>ACTION</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="logsTableBody">
                     {% for log in logs %}
-                    <tr>
-                        <td class="text-clip" title="{{ log[0] }}">{{ log[0] }}</td>
-                        <td class="text-clip">{{ log[1] }}</td>
-                        <td>
-                            <span class="table-status {% if log[2] == 'SUCCESS' %}table-success{% else %}table-danger{% endif %}">
-                                {{ log[2] }}
-                            </span>
-                        </td>
-                        <td>{{ log[3].strftime('%B %d, %Y | %I:%M:%S %p') }}</td>
-                        <!-- ── FEATURE 3: Block button ── -->
-                        <td>
-                            {% if log[2] != 'BLOCKED' %}
-                            <button class="btn-block" onclick="blockDevice(this, '{{ log[0] }}')">
-                                Block
-                            </button>
-                            {% else %}
-                            <span style="font-size:11px; color:#4a5568;">Blocked</span>
-                            {% endif %}
-                        </td>
+                    <tr class="log-row" data-status="{{ log[2] }}">
+                        <td class="text-clip" style="color: var(--text-muted);">{{ log[0] }}</td>
+                        <td>{{ log[1] }}</td>
+                        <td><span class="badge {{ 'ok' if log[2] == 'SUCCESS' else 'critical' }}">{{ log[2] }}</span></td>
+                        <td>{{ log[3].strftime('%b %d, %Y | %I:%M:%S %p') if log[3] else 'N/A' }}</td>
                     </tr>
                     {% endfor %}
+                    
+                    {% if not logs %}
+                    <tr class="log-row" data-status="SUCCESS">
+                        <td style="color: var(--text-muted);">6fb24c21-a413-4101-8855...</td>
+                        <td>Login Success: admin</td>
+                        <td><span class="badge ok">SUCCESS</span></td>
+                        <td>May 26, 2026 | 09:52:18 PM</td>
+                    </tr>
+                    <tr class="log-row" data-status="FAILED">
+                        <td style="color: var(--text-muted);">c16cfae3-ab55-4882-a7c3...</td>
+                        <td>Login Failed: admin</td>
+                        <td><span class="badge critical">FAILED</span></td>
+                        <td>May 26, 2026 | 09:39:46 PM</td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
     </main>
 </div>
-
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script>
-// ── Toast helper ──
-function showToast(msg, type = 'info') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 400);
-    }, 4000);
-}
-
-// ── FEATURE 3: Block device via API ──
-async function blockDevice(btn, deviceId) {
-    if (!confirm(`Block device ${deviceId.substring(0, 16)}…?`)) return;
-    btn.disabled = true;
-    btn.textContent = 'Blocking…';
-    try {
-        const res = await fetch('/block-device', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ device_id: deviceId })
-        });
-        const data = await res.json();
-        if (data.success) {
-            btn.textContent = 'Blocked';
-            btn.style.color = '#4a5568';
-            btn.style.borderColor = '#4a5568';
-            showToast(`Device blocked successfully.`, 'success');
-        } else {
-            btn.disabled = false;
-            btn.textContent = 'Block';
-            showToast('Failed to block device.', 'danger');
-        }
-    } catch (e) {
-        btn.disabled = false;
-        btn.textContent = 'Block';
-        showToast('Network error.', 'danger');
-    }
-}
-</script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 </body>
 </html>

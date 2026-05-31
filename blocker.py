@@ -27,3 +27,11 @@ def is_blocked(device_id):
     conn.close()
 
     return result is not None
+
+def get_block_reason(device_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT reason FROM blocked_devices WHERE device_id=%s", (device_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None

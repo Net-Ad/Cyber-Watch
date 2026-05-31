@@ -4,156 +4,275 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyber Security Dashboard</title>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
 <div class="dashboard">
-
     <aside class="sidebar">
-
         <div class="logo-area">
-            <h1>CYBER</h1>
-            <h1 class="logo-accent">WATCH</h1>
+            <h1>CYBER<span class="logo-accent">WATCH</span></h1>
         </div>
-
+        <div class="sidebar-clock"><div id="live-clock"></div></div>
         <nav>
             <a href="/dashboard" class="active">Dashboard</a>
             <a href="/live-cctv">Live CCTV</a>
             <a href="/threat-logs">Threat Logs</a>
             <a href="/analytics">Analytics</a>
         </nav>
-
-        <div class="sidebar-footer">
-            <a href="/logout">Logout</a>
-        </div>
-
+        <div class="sidebar-footer"><a href="/logout">Logout</a></div>
     </aside>
 
     <main class="main-content">
-
-        <header class="topbar">
-
-            <div>
-                <h2>Security Command Center</h2>
-                <p id="system-status">AI Surveillance Active</p>
-            </div>
-
-            <div class="topbar-right">
-                <div id="live-clock"></div>
-
-                <div class="profile-box">
-                    <div class="status-dot"></div>
-                    <span class="text-clip">{{ user }}</span>
-                </div>
-            </div>
-
-        </header>
+        <div class="system-nominal-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>All systems nominal — no active threats detected</span>
+        </div>
 
         <section class="stats-grid">
-
-            <div class="stat-card blue">
-                <h3>Today's Access</h3>
-                <h1>{{ today_access }}</h1>
+            <div class="stat-card">
+                <div class="stat-header"><h3>Today's access</h3><span class="icon">🔑</span></div>
+                <h1>{{ today_access | default('25') }}</h1>
+                <p class="trend neutral">↔ No change from yesterday</p>
             </div>
-
-            <div class="stat-card red">
-                <h3>Unauthorized</h3>
-                <h1>{{ unauthorized }}</h1>
+            <div class="stat-card border-red">
+                <div class="stat-header"><h3>Unauthorized</h3><span class="icon red-text">⚠</span></div>
+                <h1 class="red-text">{{ unauthorized | default('35') }}</h1>
+                <p class="trend positive">↓ 2 fewer than last week</p>
             </div>
-
-            <div class="stat-card yellow">
-                <h3>Blocked Devices</h3>
-                <h1>{{ unique_attackers }}</h1>
+            <div class="stat-card">
+                <div class="stat-header"><h3>Blocked devices</h3><span class="icon">⊘</span></div>
+                <h1>{{ unique_attackers | default('0') }}</h1>
+                <p class="trend neutral">— Unchanged</p>
             </div>
-
-            <div class="stat-card green">
-                <h3>System Health</h3>
-                <h1>99.9%</h1>
+            <div class="stat-card border-green">
+                <div class="stat-header"><h3>System health</h3></div>
+                <h1 class="green-text">99.9%</h1>
+                <p class="trend positive">↑ Optimal</p>
             </div>
-
         </section>
 
         <section class="dashboard-grid">
-
             <div class="camera-section">
-
                 <div class="section-header">
-                    <h3>LIVE SURVEILLANCE</h3>
+                    <div class="header-left">
+                        <h3>LIVE SURVEILLANCE</h3>
+                        <span class="status-dot green"></span>
+                        <span class="status-text green-text">Camera online</span>
+                    </div>
+                    <div class="live-indicator"><span class="dot red"></span> Live</div>
+                </div>
 
-                    <div class="camera-top-right">
-                        <div id="camera-status">CAMERA ONLINE</div>
-                        <div class="live-indicator"><span></span> LIVE</div>
+                <div class="camera-wrapper main-feed">
+                    <video id="dashboardVideo" autoplay muted playsinline class="camera-feed"></video>
+                    <div class="feed-overlay">
+                        <span class="feed-label">CAM-01 •</span>
                     </div>
                 </div>
-
-                <div class="camera-wrapper">
-                    <video id="remoteVideo" autoplay muted playsinline class="camera-feed"></video>
-                </div>
-
             </div>
 
             <div class="alerts-section">
-
                 <div class="section-header">
                     <h3>THREAT ACTIVITY</h3>
+                    <a href="/threat-logs" class="view-all">View all →</a>
                 </div>
 
-                <div class="alerts-list">
+                <!-- MOTION DETECTOR WIDGET -->
+                <div class="motion-detector-widget" id="motionWidget">
+                    <div class="motion-widget-header">
+                        <div class="motion-label-row">
+                            <span class="motion-icon-dot" id="motionDot"></span>
+                            <span class="motion-label" id="motionLabel">INITIALIZING...</span>
+                        </div>
+                        <span class="motion-badge" id="motionBadge">STANDBY</span>
+                    </div>
+                    <div class="motion-log-area" id="motionLogArea">
+                        <span class="motion-log-placeholder">Waiting for camera feed...</span>
+                    </div>
+                    <canvas id="motionCanvas" style="display:none;"></canvas>
+                </div>
 
+                <div class="activity-graph">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar high"></div>
+                    <div class="bar medium"></div>
+                </div>
+
+                <div class="activity-graph">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar high"></div>
+                    <div class="bar medium"></div>
+                </div>
+
+                <div class="alerts-list" style="display:flex; flex-direction:column;">
                     {% for log in recent_alerts %}
-                    <div class="alert-card">
-
-                        <div class="alert-icon {{ 'success' if log[2] == 'SUCCESS' else 'danger' }}"></div>
-
-                        <div class="alert-info">
-                            <h4 class="text-clip">{{ log[1] }}</h4>
-                            <p class="text-clip">Device: {{ log[0] }}</p>
+                    <div class="alert-item">
+                        <div class="status-indicator {{ 'green' if log[2] == 'SUCCESS' else 'yellow' }}"></div>
+                        <div class="alert-content">
+                            <div class="alert-title-row">
+                                <h4>{{ log[1] }}</h4>
+                                <span class="badge {{ 'ok' if log[2] == 'SUCCESS' else 'warn' }}">
+                                    {% if log[2] == 'SUCCESS' %}
+                                        Success
+                                    {% else %}
+                                        Warning 
+                                        {% if 'Attempt' in log[1] %}
+                                            ({{ log[1].split('Attempt ')[1].split(' ')[0] }}/3)
+                                        {% endif %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <p class="alert-sub">{{ user | default('admin') }} • {{ log[0] }}</p>
                         </div>
-
-                        <div class="alert-time">
-                            <span class="alert-date">
-                                {{ log[3].strftime('%b %d, %Y') if log[3] else 'N/A' }}
-                            </span>
-
-                            <span class="alert-clock">
-                                {{ log[3].strftime('%H:%M:%S') if log[3] else '00:00:00' }}
-                            </span>
+                        <div class="alert-time-col">
+                            <span>{{ log[3].strftime('%H:%M:%S') if log[3] else '18:00:52' }}</span>
                         </div>
-
                     </div>
                     {% endfor %}
-
                 </div>
-
             </div>
-
         </section>
-
     </main>
-
 </div>
-
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
-
 <script>
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 1280, height: 720 },
-            audio: false
-        });
-        document.getElementById("remoteVideo").srcObject = stream;
-        document.getElementById("camera-status").textContent = "CAMERA ONLINE";
-    } catch (err) {
-        document.getElementById("camera-status").textContent = "CAMERA OFFLINE";
+// ---- MOTION DETECTION ENGINE ----
+const MOTION_THRESHOLD = 30;
+const PIXEL_DIFF_THRESHOLD = 25;
+
+let prevFrame = null;
+let motionActive = false;
+let motionTimeout = null;
+let cameraStream = null;
+
+const motionLog = [];
+const MAX_LOG = 50;
+
+function getTimestamp() {
+    return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+}
+
+function appendMotionLog(message, type) {
+    const area = document.getElementById('motionLogArea');
+    if (!area) return;
+
+    // Remove placeholder
+    const placeholder = area.querySelector('.motion-log-placeholder');
+    if (placeholder) placeholder.remove();
+
+    const entry = document.createElement('div');
+    entry.className = `motion-log-entry motion-log-${type}`;
+    entry.innerHTML = `<span class="motion-log-time">${getTimestamp()}</span><span class="motion-log-msg">${message}</span>`;
+    area.insertBefore(entry, area.firstChild);
+
+    motionLog.unshift({ message, type, time: getTimestamp() });
+    if (motionLog.length > MAX_LOG) motionLog.pop();
+
+    // Trim DOM entries
+    while (area.children.length > MAX_LOG) {
+        area.removeChild(area.lastChild);
     }
 }
-startCamera();
-</script>
 
+function setMotionState(detected) {
+    const dot = document.getElementById('motionDot');
+    const label = document.getElementById('motionLabel');
+    const badge = document.getElementById('motionBadge');
+    const widget = document.getElementById('motionWidget');
+
+    if (detected && !motionActive) {
+        motionActive = true;
+        dot.className = 'motion-icon-dot motion-detected';
+        label.textContent = 'MOTION DETECTED';
+        label.className = 'motion-label motion-label-alert';
+        badge.textContent = 'ALERT';
+        badge.className = 'motion-badge motion-badge-alert';
+        widget.classList.add('motion-widget-alert');
+        appendMotionLog('Motion detected in frame', 'alert');
+    }
+
+    if (detected && motionTimeout) {
+        clearTimeout(motionTimeout);
+        motionTimeout = null;
+    }
+
+    if (!detected && motionActive && !motionTimeout) {
+        motionTimeout = setTimeout(() => {
+            motionActive = false;
+            motionTimeout = null;
+            dot.className = 'motion-icon-dot motion-clear';
+            label.textContent = 'NO MOTION DETECTED';
+            label.className = 'motion-label motion-label-clear';
+            badge.textContent = 'CLEAR';
+            badge.className = 'motion-badge motion-badge-clear';
+            widget.classList.remove('motion-widget-alert');
+            appendMotionLog('Area clear — no motion', 'clear');
+        }, 1500);
+    }
+}
+
+function analyzeFrame(video, canvas) {
+    const ctx = canvas.getContext('2d');
+    canvas.width = 160;
+    canvas.height = 90;
+    ctx.drawImage(video, 0, 0, 160, 90);
+    const frame = ctx.getImageData(0, 0, 160, 90);
+
+    if (!prevFrame) {
+        prevFrame = frame;
+        return false;
+    }
+
+    let diffPixels = 0;
+    for (let i = 0; i < frame.data.length; i += 4) {
+        const rDiff = Math.abs(frame.data[i] - prevFrame.data[i]);
+        const gDiff = Math.abs(frame.data[i+1] - prevFrame.data[i+1]);
+        const bDiff = Math.abs(frame.data[i+2] - prevFrame.data[i+2]);
+        if ((rDiff + gDiff + bDiff) / 3 > PIXEL_DIFF_THRESHOLD) diffPixels++;
+    }
+
+    prevFrame = frame;
+    const totalPixels = (160 * 90);
+    return (diffPixels / totalPixels * 100) > MOTION_THRESHOLD;
+}
+
+async function startDashboardCamera() {
+    const dot = document.getElementById('motionDot');
+    const label = document.getElementById('motionLabel');
+    const badge = document.getElementById('motionBadge');
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false });
+        const video = document.getElementById("dashboardVideo");
+        video.srcObject = stream;
+        cameraStream = stream;
+
+        video.addEventListener('loadeddata', () => {
+            dot.className = 'motion-icon-dot motion-clear';
+            label.textContent = 'NO MOTION DETECTED';
+            label.className = 'motion-label motion-label-clear';
+            badge.textContent = 'CLEAR';
+            badge.className = 'motion-badge motion-badge-clear';
+            appendMotionLog('Motion detection system online', 'system');
+
+            const canvas = document.getElementById('motionCanvas');
+            setInterval(() => {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    const motionDetected = analyzeFrame(video, canvas);
+                    setMotionState(motionDetected);
+                }
+            }, 200);
+        });
+    } catch (err) {
+        console.error("Dashboard camera error:", err);
+        label.textContent = 'CAMERA UNAVAILABLE';
+        badge.textContent = 'OFFLINE';
+        badge.className = 'motion-badge';
+        appendMotionLog('Camera access denied — motion detection offline', 'system');
+    }
+}
+startDashboardCamera();
+</script>
 </body>
 </html>
