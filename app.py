@@ -23,7 +23,7 @@ frame_lock = threading.Lock()
 # To add or change cameras, edit this list directly.
 # Each entry: { "name": "<label>", "url": "<MJPEG or snapshot URL>" }
 CAMERAS = [
-    {"name": "Main Entrance",  "url": "http://192.168.1.101/video"},
+    {"name": "Camera 1",  "url": "http://192.168.1.101/video"},
 ]
 # ───────────────────────────────────────────────────────────────────────────
 
