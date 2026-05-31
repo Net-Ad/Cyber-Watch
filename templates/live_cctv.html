@@ -7,16 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ── Per-camera layout: video left, status sidebar right ── */
-        .camera-layout {
+        /* ── Page-level two-column layout ── */
+        .cctv-page-wrap {
             display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            margin-bottom: 28px;
+            flex-direction: column;
+            gap: 28px;
         }
 
-        /* ── Feed card (left) ── */
-        .feed-card {
+        /* Each camera: big video left, tall stat sidebar right */
+        .camera-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        /* ── Left: video panel ── */
+        .feed-panel {
             flex: 1;
             min-width: 0;
             background: var(--card-bg, #1a1a2e);
@@ -24,127 +30,167 @@
             border-radius: 12px;
             overflow: hidden;
         }
-        .feed-card-header {
+        .feed-panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 18px;
+            padding: 13px 18px;
             border-bottom: 1px solid var(--border-color, #2a2a4a);
         }
-        .feed-card-header h3 {
+        .feed-panel-header h3 {
             margin: 0;
-            font-size: 12px;
-            letter-spacing: 2px;
+            font-size: 11px;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
+            color: var(--text-primary, #c8c8e8);
+        }
+        .live-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
             color: var(--text-primary, #e0e0ff);
         }
-        .live-indicator { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .dot.red  { background: #e74c3c; animation: blink 1s infinite; }
-        .dot.grey { background: #444; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+        .live-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: #555;
+            flex-shrink: 0;
+        }
+        .live-dot.on  { background: #e74c3c; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
 
-        .feed-img-wrap {
+        .feed-video-wrap {
             position: relative;
             width: 100%;
-            background: #060610;
-            min-height: 260px;
+            background: #05050f;
+            min-height: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .feed-img-wrap img { width: 100%; height: auto; display: block; }
-        .feed-overlay-status {
-            position: absolute; bottom: 8px; left: 10px;
-            font-size: 10px; color: rgba(255,255,255,0.45);
-            background: rgba(0,0,0,0.6);
-            padding: 2px 8px; border-radius: 4px;
+        .feed-video-wrap img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .feed-timestamp {
+            position: absolute;
+            bottom: 10px; left: 14px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            background: rgba(0,0,0,0.55);
+            padding: 3px 9px;
+            border-radius: 4px;
             font-family: monospace;
         }
-        .feed-error {
-            color: #e74c3c; font-size: 13px;
-            text-align: center; padding: 40px 20px; line-height: 1.8;
+        .feed-placeholder {
+            color: #333;
+            font-size: 13px;
+            text-align: center;
+            padding: 60px 20px;
+            line-height: 1.8;
         }
-        .feed-connecting {
-            color: var(--text-muted, #555);
-            font-size: 13px; padding: 40px; text-align: center;
+        .feed-error-msg {
+            color: #c0392b;
+            font-size: 13px;
+            text-align: center;
+            padding: 60px 20px;
+            line-height: 1.8;
         }
 
-        /* ── Status sidebar (right) ── */
-        .status-sidebar {
-            width: 240px;
+        /* ── Right: stat sidebar ── */
+        .stat-sidebar {
+            width: 220px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .stat-card {
             background: var(--card-bg, #1a1a2e);
             border: 1px solid var(--border-color, #2a2a4a);
             border-radius: 10px;
-            padding: 14px 18px;
+            padding: 16px 18px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
-        .stat-label {
+
+        .stat-card-label {
             font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-muted, #666);
+            letter-spacing: 1.3px;
+            color: #666;
             font-weight: 500;
         }
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary, #e0e0ff);
-            line-height: 1.2;
-        }
-        .stat-value.green { color: #1db954; }
-        .stat-value.red   { color: #e74c3c; }
-        .stat-value.muted { color: #444; font-size: 15px; font-weight: 500; }
 
-        /* Motion card */
-        .stat-card.motion-card { gap: 8px; }
-        .motion-header {
+        .stat-card-value {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #e0e0ff;
+        }
+        .stat-card-value.green  { color: #1db954; }
+        .stat-card-value.red    { color: #e74c3c; }
+        .stat-card-value.dim    { color: #3a3a5a; font-size: 16px; font-weight: 500; }
+
+        /* Motion card extras */
+        .motion-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 8px;
         }
-        .motion-indicator {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; font-weight: 700;
-        }
-        .motion-dot { width: 9px; height: 9px; border-radius: 50%; background: #1db954; flex-shrink: 0; }
-        .motion-dot.alert { background: #e74c3c; animation: blink 0.5s infinite; }
-        .motion-label-text { color: #1db954; }
-        .motion-label-text.alert { color: #e74c3c; }
-        .clear-btn {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border-color, #2a2a4a);
-            border-radius: 5px;
-            color: var(--text-muted, #888);
-            font-size: 10px;
+        .motion-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
             font-weight: 700;
-            letter-spacing: 1px;
-            padding: 4px 10px;
+        }
+        .mdot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: #1db954;
+            flex-shrink: 0;
+        }
+        .mdot.alert { background: #e74c3c; animation: pulse 0.6s infinite; }
+        .mlabel { color: #1db954; }
+        .mlabel.alert { color: #e74c3c; }
+
+        .clear-btn {
+            background: transparent;
+            border: 1px solid #2a2a4a;
+            border-radius: 6px;
+            color: #666;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            padding: 5px 11px;
             cursor: pointer;
             text-transform: uppercase;
-            transition: background 0.2s;
+            transition: border-color 0.2s, color 0.2s;
+            white-space: nowrap;
         }
-        .clear-btn:hover { background: rgba(255,255,255,0.12); }
-        .motion-timestamp {
+        .clear-btn:hover { border-color: #4a4a7a; color: #aaa; }
+
+        .motion-time {
             font-size: 10px;
-            color: var(--text-muted, #555);
-            font-family: monospace;
+            color: #555;
             font-style: italic;
+            font-family: monospace;
+            margin-top: 2px;
         }
 
-        /* Responsive: stack on small screens */
-        @media (max-width: 800px) {
-            .camera-layout { flex-direction: column; }
-            .status-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
-            .stat-card { flex: 1; min-width: 120px; }
+        /* Responsive */
+        @media (max-width: 860px) {
+            .camera-row { flex-direction: column; }
+            .stat-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+            .stat-card { flex: 1; min-width: 130px; }
         }
     </style>
 </head>
@@ -169,7 +215,7 @@
         <header class="topbar">
             <div class="topbar-left">
                 <h2 class="page-title">Live CCTV Monitoring</h2>
-                <p class="text-muted">Real-time IP camera surveillance — school network feed</p>
+                <p class="text-muted">Real-time AI surveillance and security monitoring system</p>
             </div>
             <div class="topbar-right">
                 <div class="profile-box">
@@ -179,20 +225,14 @@
             </div>
         </header>
 
-        <!-- ── Camera feeds ── -->
-        <div id="feedsContainer">
-            <p style="text-align:center;color:var(--text-muted,#888);padding:40px;">Loading cameras…</p>
+        <div class="cctv-page-wrap" id="feedsContainer">
+            <p style="text-align:center;color:#444;padding:60px 0;">Loading cameras…</p>
         </div>
     </main>
 </div>
 
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 <script>
-// ============================================================
-//  Hardcoded-camera CCTV viewer
-//  Layout: video feed (left) + status sidebar (right) per camera
-// ============================================================
-
 let feedIntervals = {};
 let motionStates  = {};
 let frameStats    = {};
@@ -201,7 +241,6 @@ const REFRESH_MS       = 400;
 const MOTION_THRESHOLD = 3.5;
 const PIXEL_DIFF       = 20;
 
-// ── Boot ─────────────────────────────────────────────────────
 async function init() {
     try {
         const r    = await fetch('/cctv-cameras');
@@ -209,11 +248,10 @@ async function init() {
         renderFeeds(data.cameras || []);
     } catch (e) {
         document.getElementById('feedsContainer').innerHTML =
-            '<p style="color:#e74c3c;text-align:center;padding:40px;">Failed to load camera list.</p>';
+            '<p style="color:#c0392b;text-align:center;padding:60px 0;">Failed to load camera list.</p>';
     }
 }
 
-// ── Build one camera-layout row per camera ────────────────────
 function renderFeeds(cameras) {
     Object.values(feedIntervals).forEach(clearInterval);
     feedIntervals = {};
@@ -224,7 +262,7 @@ function renderFeeds(cameras) {
 
     if (!cameras.length) {
         container.innerHTML =
-            '<p style="text-align:center;color:var(--text-muted,#888);padding:40px;">No cameras configured.</p>';
+            '<p style="text-align:center;color:#444;padding:60px 0;">No cameras configured.</p>';
         return;
     }
 
@@ -234,74 +272,73 @@ function renderFeeds(cameras) {
         motionStates[i] = { prevData: null, active: false, timeout: null, lastEventTime: null, initialized: false };
         frameStats[i]   = { width: 0, height: 0, fps: 0, frameCount: 0, lastSecond: Date.now() };
 
-        container.innerHTML += `
-        <div class="camera-layout" id="camLayout-${i}">
-
-            <!-- ── Video feed card ── -->
-            <div class="feed-card">
-                <div class="feed-card-header">
+        const row = document.createElement('div');
+        row.className = 'camera-row';
+        row.id = `camRow-${i}`;
+        row.innerHTML = `
+            <!-- Video panel -->
+            <div class="feed-panel">
+                <div class="feed-panel-header">
                     <h3>${escHtml(cam.name)}</h3>
-                    <div class="live-indicator">
-                        <span class="dot grey" id="liveDot-${i}"></span>
-                        <span id="liveLabel-${i}">CONNECTING</span>
+                    <div class="live-pill">
+                        <span class="live-dot" id="liveDot-${i}"></span>
+                        <span id="liveLabel-${i}">Connecting</span>
                     </div>
                 </div>
-                <div class="feed-img-wrap" id="feedWrap-${i}">
-                    <p class="feed-connecting">Connecting…</p>
+                <div class="feed-video-wrap" id="feedWrap-${i}">
+                    <p class="feed-placeholder">Connecting to camera…</p>
                     <canvas id="motionCanvas-${i}" style="display:none;"></canvas>
                 </div>
             </div>
 
-            <!-- ── Status sidebar ── -->
-            <div class="status-sidebar">
+            <!-- Stat sidebar -->
+            <div class="stat-sidebar">
 
                 <div class="stat-card">
-                    <span class="stat-label">Camera Status</span>
-                    <span class="stat-value muted" id="statStatus-${i}">CONNECTING</span>
+                    <span class="stat-card-label">Camera Status</span>
+                    <span class="stat-card-value dim" id="statStatus-${i}">—</span>
                 </div>
 
                 <div class="stat-card">
-                    <span class="stat-label">AI Detection</span>
-                    <span class="stat-value muted" id="statAI-${i}">STANDBY</span>
+                    <span class="stat-card-label">AI Detection</span>
+                    <span class="stat-card-value dim" id="statAI-${i}">—</span>
                 </div>
 
                 <div class="stat-card">
-                    <span class="stat-label">Resolution</span>
-                    <span class="stat-value muted" id="statRes-${i}">—</span>
+                    <span class="stat-card-label">Resolution</span>
+                    <span class="stat-card-value dim" id="statRes-${i}">—</span>
                 </div>
 
                 <div class="stat-card">
-                    <span class="stat-label">Frame Rate</span>
-                    <span class="stat-value muted" id="statFPS-${i}">—</span>
+                    <span class="stat-card-label">Frame Rate</span>
+                    <span class="stat-card-value dim" id="statFPS-${i}">—</span>
                 </div>
 
-                <div class="stat-card motion-card">
-                    <span class="stat-label">Motion Detection</span>
-                    <div class="motion-header">
-                        <div class="motion-indicator">
-                            <span class="motion-dot" id="mDot-${i}"></span>
-                            <span class="motion-label-text" id="mLabel-${i}">INITIALIZING…</span>
+                <div class="stat-card">
+                    <span class="stat-card-label">Motion Detection</span>
+                    <div class="motion-row">
+                        <div class="motion-badge">
+                            <span class="mdot" id="mDot-${i}"></span>
+                            <span class="mlabel" id="mLabel-${i}">—</span>
                         </div>
                         <button class="clear-btn" onclick="clearMotion(${i})">CLEAR</button>
                     </div>
-                    <span class="motion-timestamp" id="mTime-${i}"></span>
+                    <div class="motion-time" id="mTime-${i}"></div>
                 </div>
 
-            </div>
-        </div>`;
+            </div>`;
+
+        container.appendChild(row);
     });
 
     setTimeout(() => cameras.forEach((_, i) => startFeed(i)), 50);
 }
 
-// ── Poll frames ───────────────────────────────────────────────
 function startFeed(i) {
     const proxyBase = `/cctv-proxy?index=${i}`;
 
     function pullFrame() {
         const img = new Image();
-        const ts  = Date.now();
-
         img.onload = () => {
             const wrap  = document.getElementById(`feedWrap-${i}`);
             const dot   = document.getElementById(`liveDot-${i}`);
@@ -312,15 +349,16 @@ function startFeed(i) {
             if (!liveImg) {
                 wrap.innerHTML = `
                     <img id="liveImg-${i}" style="width:100%;height:auto;display:block;">
-                    <span class="feed-overlay-status" id="feedStatus-${i}"></span>
+                    <span class="feed-timestamp" id="feedTS-${i}"></span>
                     <canvas id="motionCanvas-${i}" style="display:none;"></canvas>`;
                 liveImg = document.getElementById(`liveImg-${i}`);
             }
 
             liveImg.src = img.src;
-            document.getElementById(`feedStatus-${i}`).textContent =
-                new Date().toLocaleTimeString();
-            dot.className     = 'dot red';
+            const ts = document.getElementById(`feedTS-${i}`);
+            if (ts) ts.textContent = new Date().toLocaleTimeString();
+
+            dot.className     = 'live-dot on';
             label.textContent = 'Live';
 
             updateStats(i, img);
@@ -332,27 +370,26 @@ function startFeed(i) {
             const label = document.getElementById(`liveLabel-${i}`);
             const wrap  = document.getElementById(`feedWrap-${i}`);
             if (!dot || !label) return;
-            dot.className     = 'dot grey';
-            label.textContent = 'OFFLINE';
 
-            setStatOffline(i);
+            dot.className     = 'live-dot';
+            label.textContent = 'OFFLINE';
+            setOffline(i);
 
             if (!document.getElementById(`liveImg-${i}`) && wrap) {
                 wrap.innerHTML =
-                    '<p class="feed-error">⚠ Camera offline or unreachable.<br>' +
-                    '<small style="color:#555;margin-top:6px;display:block;">' +
-                    'Update the URL in app.py → CAMERAS.</small></p>';
+                    `<p class="feed-error-msg">⚠ Camera offline or unreachable.<br>
+                    <small style="color:#555;margin-top:6px;display:block;">
+                    Update the URL in app.py → CAMERAS.</small></p>`;
             }
         };
 
-        img.src = `${proxyBase}&_t=${ts}`;
+        img.src = `${proxyBase}&_t=${Date.now()}`;
     }
 
     pullFrame();
     feedIntervals[i] = setInterval(pullFrame, REFRESH_MS);
 }
 
-// ── Stat helpers ──────────────────────────────────────────────
 function updateStats(i, img) {
     const stat = frameStats[i];
     if (!stat) return;
@@ -364,7 +401,7 @@ function updateStats(i, img) {
     stat.frameCount++;
     const now = Date.now();
     if (now - stat.lastSecond >= 1000) {
-        stat.fps        = stat.frameCount;
+        stat.fps = stat.frameCount;
         stat.frameCount = 0;
         stat.lastSecond = now;
     }
@@ -374,24 +411,23 @@ function updateStats(i, img) {
     const elRes    = document.getElementById(`statRes-${i}`);
     const elFPS    = document.getElementById(`statFPS-${i}`);
 
-    if (elStatus) { elStatus.textContent = 'ONLINE';  elStatus.className = 'stat-value green'; }
-    if (elAI)     { elAI.textContent     = 'ACTIVE';  elAI.className     = 'stat-value green'; }
-    if (elRes)    { elRes.textContent    = stat.width ? `${stat.width}×${stat.height}` : '—'; elRes.className = 'stat-value'; }
-    if (elFPS)    { elFPS.textContent    = stat.fps   ? `${stat.fps} FPS` : '—';               elFPS.className = 'stat-value'; }
+    if (elStatus) { elStatus.textContent = 'ONLINE';  elStatus.className = 'stat-card-value green'; }
+    if (elAI)     { elAI.textContent     = 'ACTIVE';  elAI.className     = 'stat-card-value green'; }
+    if (elRes)    { elRes.textContent    = stat.width ? `${stat.width}×${stat.height}` : '—'; elRes.className = 'stat-card-value'; }
+    if (elFPS)    { elFPS.textContent    = stat.fps   ? `${stat.fps} FPS` : '—';               elFPS.className = 'stat-card-value'; }
 }
 
-function setStatOffline(i) {
+function setOffline(i) {
     const elStatus = document.getElementById(`statStatus-${i}`);
     const elAI     = document.getElementById(`statAI-${i}`);
     const elRes    = document.getElementById(`statRes-${i}`);
     const elFPS    = document.getElementById(`statFPS-${i}`);
-    if (elStatus) { elStatus.textContent = 'OFFLINE';  elStatus.className = 'stat-value red'; }
-    if (elAI)     { elAI.textContent     = 'INACTIVE'; elAI.className     = 'stat-value muted'; }
-    if (elRes)    { elRes.textContent    = '—';         elRes.className    = 'stat-value muted'; }
-    if (elFPS)    { elFPS.textContent    = '—';         elFPS.className    = 'stat-value muted'; }
+    if (elStatus) { elStatus.textContent = 'OFFLINE';  elStatus.className = 'stat-card-value red'; }
+    if (elAI)     { elAI.textContent     = 'INACTIVE'; elAI.className     = 'stat-card-value dim'; }
+    if (elRes)    { elRes.textContent    = '—';         elRes.className    = 'stat-card-value dim'; }
+    if (elFPS)    { elFPS.textContent    = '—';         elFPS.className    = 'stat-card-value dim'; }
 }
 
-// ── Motion detection ──────────────────────────────────────────
 function runMotion(i, imgEl) {
     const canvas = document.getElementById(`motionCanvas-${i}`);
     if (!canvas) return;
@@ -424,18 +460,18 @@ function setMotion(i, detected) {
 
     if (!state.initialized) {
         state.initialized = true;
-        dot.className         = 'motion-dot';
-        label.textContent     = 'NO MOTION DETECTED';
-        label.className       = 'motion-label-text';
+        dot.className     = 'mdot';
+        label.textContent = 'NO MOTION DETECTED';
+        label.className   = 'mlabel';
         if (tEl) tEl.textContent = `${new Date().toLocaleTimeString()}  Motion detection system online`;
     }
 
     if (detected && !state.active) {
         state.active        = true;
         state.lastEventTime = new Date();
-        dot.className       = 'motion-dot alert';
+        dot.className       = 'mdot alert';
         label.textContent   = 'MOTION DETECTED';
-        label.className     = 'motion-label-text alert';
+        label.className     = 'mlabel alert';
         if (tEl) tEl.textContent = `${state.lastEventTime.toLocaleTimeString()}  Motion event triggered`;
     }
     if (detected && state.timeout) { clearTimeout(state.timeout); state.timeout = null; }
@@ -443,9 +479,9 @@ function setMotion(i, detected) {
         state.timeout = setTimeout(() => {
             state.active    = false;
             state.timeout   = null;
-            dot.className   = 'motion-dot';
+            dot.className   = 'mdot';
             label.textContent = 'NO MOTION DETECTED';
-            label.className = 'motion-label-text';
+            label.className = 'mlabel';
             if (tEl && state.lastEventTime)
                 tEl.textContent = `${state.lastEventTime.toLocaleTimeString()}  Last motion event`;
         }, 1500);
@@ -461,8 +497,8 @@ function clearMotion(i) {
     const dot   = document.getElementById(`mDot-${i}`);
     const label = document.getElementById(`mLabel-${i}`);
     const tEl   = document.getElementById(`mTime-${i}`);
-    if (dot)   dot.className     = 'motion-dot';
-    if (label) { label.textContent = 'NO MOTION DETECTED'; label.className = 'motion-label-text'; }
+    if (dot)   dot.className     = 'mdot';
+    if (label) { label.textContent = 'NO MOTION DETECTED'; label.className = 'mlabel'; }
     if (tEl)   tEl.textContent   = `${new Date().toLocaleTimeString()}  Cleared by operator`;
 }
 
