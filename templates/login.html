@@ -4,67 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyber Security Login</title>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+    .blocked-banner {
+        background: rgba(248, 81, 73, 0.15);
+        border: 1px solid rgba(248, 81, 73, 0.6);
+        color: #f85149;
+        padding: 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .block-reason {
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 6px;
+        color: #ff8080;
+    }
+    .warning-banner {
+        background: rgba(210, 153, 34, 0.12);
+        border: 1px solid rgba(210, 153, 34, 0.5);
+        color: #d29922;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: -10px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    </style>
 </head>
-
 <body class="login-page">
 
 <div class="background-overlay"></div>
-
 <div class="login-container">
-
     <div class="login-left">
-        <h1>CYBER<br>SECURITY<br>COMMAND</h1>
-
-        <p>
-            AI Powered Surveillance Monitoring System
-            with Real-Time Threat Detection
-        </p>
-
+        <h1>CYBER<br>WATCH<br><span class="text-muted">COMMAND</span></h1>
+        <p>AI Powered Surveillance Monitoring System with Real-Time Threat Detection</p>
         <div class="security-badges">
-            <span>LIVE CCTV</span>
-            <span>AI DETECTION</span>
-            <span>THREAT MONITOR</span>
+            <span class="badge ok">● LIVE CCTV</span>
+            <span class="badge ok">● AI DETECTION</span>
+            <span class="badge warn">● THREAT MONITOR</span>
         </div>
     </div>
 
     <div class="login-box">
-
         <div class="login-header">
-            <h2>SECURE LOGIN</h2>
+            <h2>Secure Login</h2>
             <p>Authorized Personnel Only</p>
         </div>
 
         <form method="POST">
+            {% if blocked %}
+            <div class="error-banner blocked-banner">
+                🚫 Access Permanently Denied
+                <div class="block-reason">{{ block_reason }}</div>
+            </div>
 
-            {% if error %}
-                <div style="color: #ff4d4d; background-color: rgba(255, 77, 77, 0.1); border: 1px solid #ff4d4d; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center; font-family: 'Inter', sans-serif; font-size: 14px;">
-                    {{ error }}
-                </div>
+            {% elif error %}
+            <div class="error-banner">⚠ {{ error }}</div>
+            {% if warning %}
+            <div class="warning-banner">{{ warning }}</div>
+            {% endif %}
             {% endif %}
 
             <div class="input-group">
                 <label>USERNAME</label>
                 <input type="text" name="username" placeholder="Enter username" required>
             </div>
-
             <div class="input-group">
                 <label>PASSWORD</label>
-                <input type="password" name="password" placeholder="Enter password" required>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                    <button type="button" id="togglePassword" class="eye-btn" aria-label="Toggle password visibility">
+                        <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg id="eyeClosed" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
-
-            <button type="submit">
-                ACCESS SYSTEM
-            </button>
-
+            <button type="submit" class="btn-primary">Access System →</button>
         </form>
-
     </div>
-
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const togglePassword = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("password");
+        const eyeOpen = document.getElementById("eyeOpen");
+        const eyeClosed = document.getElementById("eyeClosed");
 
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener("click", function() {
+                // Toggle the type attribute
+                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+                passwordInput.setAttribute("type", type);
+
+                // Toggle the eye icons
+                if (type === "text") {
+                    eyeOpen.style.display = "none";
+                    eyeClosed.style.display = "block";
+                } else {
+                    eyeOpen.style.display = "block";
+                    eyeClosed.style.display = "none";
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

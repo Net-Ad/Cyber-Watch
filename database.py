@@ -1,6 +1,12 @@
+import os
 import psycopg2
+from dotenv import load_dotenv
 
-DATABASE_URL = "postgresql://cctv_security_user:dQBxqR1O7maOEnZ1yakDVuN9i7XFidHi@dpg-d7utc1reo5us73dcd810-a.singapore-postgres.render.com/cctv_security"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL is not set in the environment variables.")
     return psycopg2.connect(DATABASE_URL)

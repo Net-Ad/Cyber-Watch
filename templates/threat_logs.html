@@ -3,60 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Threat Logs</title>
-
+    <title>Threat Logs - Cyber Watch</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
 <div class="dashboard">
-
     <aside class="sidebar">
-
         <div class="logo-area">
-            <h1>CYBER</h1>
-            <h1 class="logo-accent">WATCH</h1>
+            <h1>CYBER<span class="logo-accent">WATCH</span></h1>
         </div>
-
+        <div class="sidebar-clock"><div id="live-clock"></div></div>
         <nav>
             <a href="/dashboard">Dashboard</a>
             <a href="/live-cctv">Live CCTV</a>
             <a href="/threat-logs" class="active">Threat Logs</a>
             <a href="/analytics">Analytics</a>
         </nav>
-
-        <div class="sidebar-footer">
-            <a href="/logout">Logout</a>
-        </div>
-
+        <div class="sidebar-footer"><a href="/logout">Logout</a></div>
     </aside>
 
     <main class="main-content">
-
-        <div class="topbar">
-
-            <div>
-                <h2>Security Command Center</h2>
-                <p id="system-status">AI Surveillance Active</p>
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2 class="page-title">Threat Logs</h2>
+                <p class="text-muted">Threat Detection Running</p>
             </div>
-
             <div class="topbar-right">
-                <div id="live-clock"></div>
-
                 <div class="profile-box">
-                    <div class="status-dot"></div>
-                    <span class="text-clip">{{ user }}</span>
+                    <span class="status-dot green"></span>
+                    <span>{{ user | default('admin') }}</span>
                 </div>
             </div>
+        </header>
 
+        <div class="logs-controls">
+            <div class="search-row">
+                <input type="text" id="logSearch" placeholder="Search device ID or event...">
+                <button id="searchBtn">Search</button>
+            </div>
+            
+            <div class="filter-row">
+                <div class="filter-pills">
+                    <button class="filter-pill active" data-filter="all">All</button>
+                    <button class="filter-pill" data-filter="SUCCESS">Success</button>
+                    <button class="filter-pill" data-filter="FAILED">Failed</button>
+                    <button class="filter-pill" data-filter="BLOCKED">Blocked</button>
+                </div>
+                <span class="results-count">{{ logs|length if logs else '0' }} results</span>
+            </div>
         </div>
 
         <div class="logs-table-container">
-
             <table class="logs-table">
-
                 <thead>
                     <tr>
                         <th>DEVICE ID</th>
@@ -65,39 +65,35 @@
                         <th>DATE & TIME</th>
                     </tr>
                 </thead>
-
-                <tbody>
-
+                <tbody id="logsTableBody">
                     {% for log in logs %}
-                    <tr>
-
-                        <td class="text-clip">{{ log[0] }}</td>
-                        <td class="text-clip">{{ log[1] }}</td>
-
-                        <td>
-                            <span class="table-status {% if log[2] == 'SUCCESS' %}table-success{% else %}table-danger{% endif %}">
-                                {{ log[2] }}
-                            </span>
-                        </td>
-
-                        <td>
-                            {{ log[3].strftime('%B %d, %Y | %I:%M:%S %p') }}
-                        </td>
-
+                    <tr class="log-row" data-status="{{ log[2] }}">
+                        <td class="text-clip" style="color: var(--text-muted);">{{ log[0] }}</td>
+                        <td>{{ log[1] }}</td>
+                        <td><span class="badge {{ 'ok' if log[2] == 'SUCCESS' else 'critical' }}">{{ log[2] }}</span></td>
+                        <td>{{ log[3].strftime('%b %d, %Y | %I:%M:%S %p') if log[3] else 'N/A' }}</td>
                     </tr>
                     {% endfor %}
-
+                    
+                    {% if not logs %}
+                    <tr class="log-row" data-status="SUCCESS">
+                        <td style="color: var(--text-muted);">6fb24c21-a413-4101-8855...</td>
+                        <td>Login Success: admin</td>
+                        <td><span class="badge ok">SUCCESS</span></td>
+                        <td>May 26, 2026 | 09:52:18 PM</td>
+                    </tr>
+                    <tr class="log-row" data-status="FAILED">
+                        <td style="color: var(--text-muted);">c16cfae3-ab55-4882-a7c3...</td>
+                        <td>Login Failed: admin</td>
+                        <td><span class="badge critical">FAILED</span></td>
+                        <td>May 26, 2026 | 09:39:46 PM</td>
+                    </tr>
+                    {% endif %}
                 </tbody>
-
             </table>
-
         </div>
-
     </main>
-
 </div>
-
 <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
-
 </body>
 </html>

@@ -52,3 +52,11 @@ def clear_failed_attempts(device_id):
 
     conn.commit()
     conn.close()
+
+def get_failed_count(device_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT count FROM failed_attempts WHERE device_id=%s", (device_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else 0
