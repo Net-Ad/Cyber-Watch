@@ -1,0 +1,14 @@
+Flask
+gunicorn
+psycopg2-binary
+opencv-python-headless
+numpy
+tzdata
+Werkzeug
+Jinja2
+itsdangerous
+click
+blinker
+python-dotenv
+requests
+gevent

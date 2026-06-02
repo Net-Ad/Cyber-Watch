@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live CCTV - Cyber Watch</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <h1>CYBER<span class="logo-accent">WATCH</span></h1>
+        </div>
+        <div class="sidebar-clock"><div id="live-clock"></div></div>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/live-cctv" class="active">Live CCTV</a>
+            <a href="/threat-logs">Threat Logs</a>
+            <a href="/analytics">Analytics</a>
+        </nav>
+        <div class="sidebar-footer"><a href="/logout">Logout</a></div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2 class="page-title">Live CCTV Monitoring</h2>
+                <p class="text-muted">Real-time AI surveillance and security monitoring system</p>
+            </div>
+            <div class="topbar-right">
+                <div class="profile-box">
+                    <span class="status-dot green"></span>
+                    <span>{{ user | default('admin') }}</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="cctv-grid">
+            <div class="cctv-card camera-section">
+                <div class="section-header">
+                    <div class="header-left"><h3>CAMERA 01</h3></div>
+                    <div class="live-indicator"><span class="dot red"></span> Live</div>
+                </div>
+                <img id="localVideo" src="{{ url_for('video_feed') }}" class="camera-feed" style="border-radius: 8px; width: 100%; height: auto; border: 1px solid var(--border-color);" alt="CCTV Feed">
+                <p id="cam-status" style="color:var(--text-muted); margin-top:10px; font-size:13px;"></p>
+            </div>
+
+            <div class="camera-side-panel">
+                <div class="camera-info-card">
+                    <h3>Camera Status</h3>
+                    <p id="status-text" class="green-text">ONLINE</p>
+                </div>
+                <div class="camera-info-card">
+                    <h3>AI Detection</h3>
+                    <p class="green-text">ACTIVE</p>
+                </div>
+                <div class="camera-info-card">
+                    <h3>Resolution</h3>
+                    <p>1280x720</p>
+                </div>
+                <div class="camera-info-card">
+                    <h3>Frame Rate</h3>
+                    <p>30 FPS</p>
+                </div>
+
+                <div class="camera-info-card motion-detector-widget" id="motionWidget" style="padding: 20px;">
+                    <h3>Motion Detection</h3>
+                    <div class="motion-widget-header" style="margin-bottom: 12px; margin-top: 10px;">
+                        <div class="motion-label-row">
+                            <span class="motion-icon-dot motion-clear" id="motionDot"></span>
+                            <span class="motion-label motion-label-clear" id="motionLabel" style="font-size: 13px; font-weight: 700;">MONITORING ACTIVE</span>
+                        </div>
+                        <span class="motion-badge motion-badge-clear" id="motionBadge" style="margin-top: 8px;">ONLINE</span>
+                    </div>
+                    <div class="motion-log-area motion-log-area-compact" id="motionLogArea">
+                        <div class="motion-log-entry motion-log-system">
+                            <span class="motion-log-msg">External stream connection stable.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
