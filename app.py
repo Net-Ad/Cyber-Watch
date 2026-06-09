@@ -134,15 +134,16 @@ def login():
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT username, password 
-            FROM users 
-            WHERE username=%s
-        """, (username,))
+            SELECT username
+            FROM users
+            WHERE username = %s
+            AND password = crypt(%s, password)
+        """, (username, password))
 
         user = cursor.fetchone()
         conn.close()
 
-        if user and check_password_hash(user[1], password):
+        if user:
             session.permanent = True
             session["user"] = username
 
@@ -166,6 +167,7 @@ def login():
             blocker.block_device(device_id, "Too many failed login attempts (brute force detected)")
             save_log(device_id, "Brute Force Detected", "ALERT")
             save_log(device_id, "DEVICE BLOCKED", "BLOCKED")
+
             return render_template(
                 "login.html",
                 blocked=True,
@@ -195,16 +197,7 @@ def login():
         )
         return response
 
-    response = make_response(render_template("login.html"))
-    response.set_cookie(
-        "device_id",
-        device_id,
-        max_age=60 * 60 * 24 * 365,
-        httponly=True,
-        samesite="Lax"
-    )
-    return response
-
+    return render_template("login.html")
 
 @app.route("/dashboard")
 def dashboard():
